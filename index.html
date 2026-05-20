@@ -15,6 +15,7 @@
             --emerald: #10b981;
             --orange: #f97316;
             --red: #ef4444;
+            --purple: #a855f7;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
         body { background-color: var(--bg); color: var(--text); display: flex; min-height: 100vh; }
@@ -48,6 +49,7 @@
         .day-cell:hover { background: rgba(255,255,255,0.04); }
         .day-cell.active { border-color: var(--blue); background: rgba(59, 130, 246, 0.08); }
         .day-cell.has-data::after { content: ''; position: absolute; bottom: 4px; right: 4px; width: 5px; height: 5px; background: var(--emerald); border-radius: 50%; }
+        .day-cell.has-deadline::before { content: '⚠️'; position: absolute; top: 4px; right: 4px; font-size: 0.65rem; }
         .day-hours-badge { font-size: 0.7rem; color: var(--blue); font-weight: 700; align-self: flex-start; }
         
         .calendar-layout { display: grid; grid-template-columns: 1.2fr 1fr; gap: 24px; }
@@ -66,10 +68,26 @@
         .task-subj-tag { font-size: 0.7rem; background: rgba(16, 185, 129, 0.12); color: var(--emerald); padding: 2px 6px; border-radius: 4px; font-weight: 600; }
         .del-btn { background: none; border: none; color: var(--red); cursor: pointer; font-size: 0.8rem; }
         
+        /* Alerts for Deadlines inside day dashboard view */
+        .deadline-alert-node { background: rgba(239, 68, 68, 0.08); border: 1px solid var(--red); border-radius: 8px; padding: 10px; margin-bottom: 10px; font-size: 0.85rem; }
+        .deadline-badge-type { font-size: 0.65rem; font-weight: 800; text-transform: uppercase; padding: 2px 6px; border-radius: 4px; margin-right: 6px; color: #fff; }
+        .badge-mock { background: var(--purple); }
+        .badge-rev { background: var(--orange); }
+
+        /* Inline Block Context Panel styles */
+        .inline-block-node { background: rgba(249, 115, 22, 0.04); border: 1px dashed var(--orange); border-radius: 8px; padding: 12px; margin-bottom: 12px; }
+        .inline-block-node-title { font-size: 0.85rem; font-weight: 700; color: var(--orange); margin-bottom: 6px; display: flex; justify-content: space-between; }
+        
         /* Subject Stats List Display */
         .stat-grid { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
         .stat-row { display: flex; justify-content: space-between; font-size: 0.8rem; padding: 6px 8px; background: rgba(255,255,255,0.01); border: 1px solid var(--border); border-radius: 6px; }
         .stat-hours-count { font-weight: 700; color: var(--blue); }
+
+        /* Block Cards Layout */
+        .block-card { background: rgba(255,255,255,0.01); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 14px; }
+        .block-title { font-weight: 600; color: #fff; font-size: 1rem; margin-bottom: 4px; }
+        .block-dates { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 10px; }
+        .block-task-item { font-size: 0.85rem; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.03); }
 
         /* Pomodoro Custom Elements */
         .timer-display { font-size: 4.5rem; font-weight: 800; text-align: center; margin: 16px 0; font-variant-numeric: tabular-nums; color: var(--orange); }
@@ -94,6 +112,7 @@
         <nav style="margin-top:auto;">
             <button class="nav-btn active" id="btn-calendar" onclick="switchView('calendar-view')">Daily Calendar</button>
             <button class="nav-btn" id="btn-planner" onclick="switchView('planner-view')">Block Planner</button>
+            <button class="nav-btn" id="btn-deadlines" onclick="switchView('deadlines-view')">Deadline Master</button>
             <button class="nav-btn" id="btn-pomodoro" onclick="switchView('pomodoro-view')">Sync Pomodoro</button>
         </nav>
     </aside>
@@ -123,7 +142,12 @@
                 <div>
                     <div class="box">
                         <h3 id="selected-date-title">Select a Date</h3>
-                        <div style="margin-top:12px;">
+                        
+                        <div id="inline-calendar-deadline-alerts" style="margin-top: 10px;"></div>
+                        
+                        <div id="inline-calendar-block-status"></div>
+
+                        <div style="margin-top:12px; border-top: 1px solid var(--border); padding-top:14px;">
                             <label style="font-size:0.75rem; color:var(--text-muted);">Select Target Subject</label>
                             <select id="day-subject-select">
                                 <option value="aa">Paper 1: Advanced Accounting</option>
@@ -135,10 +159,10 @@
                             </select>
 
                             <label style="font-size:0.75rem; color:var(--text-muted);">Task Description / Chapter Details</label>
-                            <input type="text" id="day-task-input" placeholder="e.g. Completed Audit Sampling Questions">
+                            <input type="text" id="day-task-input" placeholder="e.g. Practiced Mock Test Series 1">
                             
                             <label style="font-size:0.75rem; color:var(--text-muted);">Study Time Hours</label>
-                            <input type="number" id="day-hours-input" step="0.5" placeholder="e.g. 2.5">
+                            <input type="number" id="day-hours-input" step="0.5" placeholder="e.g. 3.0">
                             
                             <button class="action-btn" onclick="saveDayTask()">Commit Daily Task Log</button>
                         </div>
@@ -188,6 +212,46 @@
             <div class="box">
                 <h3>Active Study Blocks Timeline</h3>
                 <div id="blocks-container"></div>
+            </div>
+        </div>
+
+        <div id="deadlines-view" class="view-section">
+            <div class="box">
+                <h3>Schedule Subject Mock Tests & Revision Deadlines</h3>
+                <div style="display:grid; grid-template-columns: 1.2fr 1fr 1fr; gap:12px;">
+                    <div>
+                        <label style="font-size:0.75rem; color:var(--text-muted)">Milestone Title / Chapter Targets</label>
+                        <input type="text" id="deadline-title-input" placeholder="e.g., ICAI MTP Series 1 Evaluation">
+                    </div>
+                    <div>
+                        <label style="font-size:0.75rem; color:var(--text-muted)">Subject Group</label>
+                        <select id="deadline-subject-select">
+                            <option value="aa">Advanced Accounting</option>
+                            <option value="law">Corporate and Other Laws</option>
+                            <option value="tax">Taxation (IT + GST)</option>
+                            <option value="cma">Cost & Management Accounting</option>
+                            <option value="audit">Auditing and Ethics</option>
+                            <option value="fmsm">FM & Strategic Management</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="font-size:0.75rem; color:var(--text-muted)">Target Deadline Type</label>
+                        <select id="deadline-type-select">
+                            <option value="mock">Full 3-Hour Mock Test</option>
+                            <option value="revision">Revision Completion Cutoff</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label style="font-size:0.75rem; color:var(--text-muted)">Target Execution Date</label>
+                    <input type="date" id="deadline-target-date" style="max-width:300px; display:block;">
+                </div>
+                <button class="action-btn" style="background:var(--purple); max-width:240px;" onclick="createDeadlineTarget()">Lock Deadline Gate</button>
+            </div>
+
+            <div class="box">
+                <h3>Scheduled Deadlines Registry</h3>
+                <div id="deadlines-list-container-panel" style="display:flex; flex-direction:column; gap:10px;"></div>
             </div>
         </div>
 
@@ -243,7 +307,8 @@
             { name: "P6: FM & SM", date: "2026-09-12" }
         ];
 
-        let db = { calendarData: {}, blocks: [], timerConfig: { focusMins: 25, breakMins: 5 } };
+        // Advanced Integrated Model Database Structure Upgrade
+        let db = { calendarData: {}, blocks: [], deadlines: [], timerConfig: { focusMins: 25, breakMins: 5 } };
         let currentNavDate = new Date();
         let selectedDateStr = new Date().toISOString().split('T')[0];
         let timerInterval = null, timeRemaining = 25 * 60, isBreakMode = false;
@@ -254,6 +319,7 @@
             document.getElementById(viewId).classList.add('active');
             if (viewId === 'calendar-view') document.getElementById('btn-calendar').classList.add('active');
             if (viewId === 'planner-view') document.getElementById('btn-planner').classList.add('active');
+            if (viewId === 'deadlines-view') document.getElementById('btn-deadlines').classList.add('active');
             if (viewId === 'pomodoro-view') document.getElementById('btn-pomodoro').classList.add('active');
         }
 
@@ -280,10 +346,14 @@
         }
 
         function initData() {
-            const saved = localStorage.getItem('ca_space_db_v5');
+            const saved = localStorage.getItem('ca_space_db_v7');
             if (saved) {
                 const parsed = JSON.parse(saved);
-                if (parsed) { db = parsed; if (!db.blocks) db.blocks = []; }
+                if (parsed) { 
+                    db = parsed; 
+                    if (!db.blocks) db.blocks = []; 
+                    if (!db.deadlines) db.deadlines = [];
+                }
             }
             document.getElementById('custom-focus-time').value = db.timerConfig.focusMins;
             document.getElementById('custom-break-time').value = db.timerConfig.breakMins;
@@ -298,13 +368,15 @@
             renderCalendar();
             renderSelectedDayView();
             renderBlocks();
+            renderDeadlines();
         }
 
         function saveAndRefresh() {
-            localStorage.setItem('ca_space_db_v5', JSON.stringify(db));
+            localStorage.setItem('ca_space_db_v7', JSON.stringify(db));
             renderCalendar();
             renderSelectedDayView();
             renderBlocks();
+            renderDeadlines();
         }
 
         function moveMonth(dir) { currentNavDate.setMonth(currentNavDate.getMonth() + dir); renderCalendar(); }
@@ -324,7 +396,15 @@
                 const mapMonth = (month + 1).toString().padStart(2, '0');
                 const mapDay = day.toString().padStart(2, '0');
                 const loopDateStr = `${year}-${mapMonth}-${mapDay}`;
-                const hasDataClass = db.calendarData[loopDateStr] && db.calendarData[loopDateStr].length > 0 ? 'has-data' : '';
+                
+                const hasDataLogs = db.calendarData[loopDateStr] && db.calendarData[loopDateStr].length > 0;
+                const matchesActiveBlockRange = db.blocks.some(b => loopDateStr >= b.start && loopDateStr <= b.end);
+                
+                // Realtime Check: Check if an upcoming master deadline is placed on this calendar cell coordinate
+                const hasDeadlineAttached = db.deadlines.some(d => d.date === loopDateStr);
+                
+                const hasDataClass = (hasDataLogs || matchesActiveBlockRange) ? 'has-data' : '';
+                const deadlineCellClass = hasDeadlineAttached ? 'has-deadline' : '';
                 const activeClass = loopDateStr === selectedDateStr ? 'active' : '';
                 
                 let dailyHoursSum = 0;
@@ -332,7 +412,7 @@
                 const displayHours = dailyHoursSum > 0 ? `<span class="day-hours-badge">${dailyHoursSum.toFixed(1)}h</span>` : '<span></span>';
 
                 gridContainer.innerHTML += `
-                    <div class="day-cell ${activeClass} ${hasDataClass}" onclick="selectDate('${loopDateStr}')">
+                    <div class="day-cell ${activeClass} ${hasDataClass} ${deadlineCellClass}" onclick="selectDate('${loopDateStr}')">
                         ${displayHours}
                         <span style="align-self: flex-end; font-weight:500;">${day}</span>
                     </div>
@@ -341,11 +421,9 @@
             renderSubjectMetrics();
         }
 
-        // Feature Calculation: Compile Metrics for Each Individual Subject
         function renderSubjectMetrics() {
             const statsContainer = document.getElementById('subject-statistics-breakdown');
             statsContainer.innerHTML = '';
-            
             let subjectHoursTracker = { aa: 0, law: 0, tax: 0, cma: 0, audit: 0, fmsm: 0 };
             
             Object.keys(db.calendarData).forEach(dateKey => {
@@ -357,11 +435,10 @@
             });
 
             Object.keys(subjectsMapping).forEach(key => {
-                const totalHoursMapped = subjectHoursTracker[key].toFixed(2);
                 statsContainer.innerHTML += `
                     <div class="stat-row">
                         <span>${subjectsMapping[key]}</span>
-                        <span class="stat-hours-count">${totalHoursMapped} Hours</span>
+                        <span class="stat-hours-count">${subjectHoursTracker[key].toFixed(2)} Hours</span>
                     </div>
                 `;
             });
@@ -372,10 +449,59 @@
         function renderSelectedDayView() {
             const parsedDate = new Date(selectedDateStr + "T00:00:00");
             document.getElementById('selected-date-title').innerText = parsedDate.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+            
+            // Render High-Priority Scheduled Deadlines Alert inside the Selected Date container
+            const alertPanel = document.getElementById('inline-calendar-deadline-alerts');
+            alertPanel.innerHTML = '';
+            const matchingDeadlines = db.deadlines.filter(d => d.date === selectedDateStr);
+            
+            if(matchingDeadlines.length > 0) {
+                matchingDeadlines.forEach(dl => {
+                    const typeBadge = dl.type === 'mock' ? '<span class="deadline-badge-type badge-mock">Mock Test</span>' : '<span class="deadline-badge-type badge-rev">Revision Deadline</span>';
+                    const completeStyle = dl.done ? 'text-decoration: line-through; opacity: 0.6;' : '';
+                    alertPanel.innerHTML += `
+                        <div class="deadline-alert-node" style="${completeStyle}">
+                            ⚠️ <strong>${typeBadge} ${subjectsMapping[dl.subject]}</strong>
+                            <div style="margin-top: 4px; color: #fff; font-size: 0.85rem;">Target: ${dl.title}</div>
+                        </div>
+                    `;
+                });
+            }
+
+            const inlineStatusContainer = document.getElementById('inline-calendar-block-status');
+            inlineStatusContainer.innerHTML = '';
+            const activeMatchingBlocks = db.blocks.filter(b => selectedDateStr >= b.start && selectedDateStr <= b.end);
+            
+            if(activeMatchingBlocks.length > 0) {
+                activeMatchingBlocks.forEach(block => {
+                    let inlineTasksProgressHTML = '';
+                    block.tasks.forEach((task) => {
+                        const strike = task.done ? 'text-decoration: line-through; color: var(--text-muted);' : 'color:#fff;';
+                        const checkMark = task.done ? '✓' : '•';
+                        inlineTasksProgressHTML += `
+                            <div style="font-size:0.8rem; margin-top:4px; display:flex; gap:6px; align-items:center; ${strike}">
+                                <span>${checkMark}</span> <span>${task.text}</span>
+                            </div>
+                        `;
+                    });
+                    inlineStatusContainer.innerHTML += `
+                        <div class="inline-block-node">
+                            <div class="inline-block-node-title">
+                                <span>🎯 Block Context: ${block.title}</span>
+                                <span style="font-size:0.7rem; opacity:0.8;">(${subjectsMapping[block.subject]})</span>
+                            </div>
+                            <div style="background: rgba(0,0,0,0.2); padding: 8px; border-radius: 6px;">
+                                ${inlineTasksProgressHTML}
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+
             const container = document.getElementById('day-tasks-container');
             container.innerHTML = '';
-            
             const entries = db.calendarData[selectedDateStr] || [];
+            
             if(entries.length === 0) { container.innerHTML = `<p style="font-size:0.85rem; color:var(--text-muted)">No entries logged for this day.</p>`; return; }
             
             entries.forEach((entry, idx) => {
@@ -423,6 +549,52 @@
             db.calendarData[selectedDateStr].splice(idx, 1);
             if(db.calendarData[selectedDateStr].length === 0) delete db.calendarData[selectedDateStr];
             saveAndRefresh();
+        }
+
+        // Deadline Core Sub-System Logic Handling
+        function createDeadlineTarget() {
+            const title = document.getElementById('deadline-title-input').value.trim();
+            const subj = document.getElementById('deadline-subject-select').value;
+            const type = document.getElementById('deadline-type-select').value;
+            const targetDate = document.getElementById('deadline-target-date').value;
+            if(!title || !targetDate) { alert("Please complete milestone targets and select target date execution."); return; }
+            
+            db.deadlines.push({ id: Math.random().toString(36).substring(2, 7), title: title, subject: subj, type: type, date: targetDate, done: false });
+            document.getElementById('deadline-title-input').value = '';
+            saveAndRefresh();
+        }
+
+        function toggleDeadlineStatus(idx) { db.deadlines[idx].done = !db.deadlines[idx].done; saveAndRefresh(); }
+        function deleteDeadlineTarget(idx) { db.deadlines.splice(idx, 1); saveAndRefresh(); }
+
+        function renderDeadlines() {
+            const container = document.getElementById('deadlines-list-container-panel');
+            container.innerHTML = '';
+            if(db.deadlines.length === 0) { container.innerHTML = `<p style="font-size:0.85rem; color:var(--text-muted)">No specialized mock tests or revision deadlines created.</p>`; return; }
+            
+            // Sort systematically by date timeline priority order
+            db.deadlines.sort((a,b) => new Date(a.date) - new Date(b.date));
+            
+            db.deadlines.forEach((dl, idx) => {
+                const badge = dl.type === 'mock' ? '<span class="deadline-badge-type badge-mock">Mock Exam</span>' : '<span class="deadline-badge-type badge-rev">Revision Gate</span>';
+                const checked = dl.done ? 'checked' : '';
+                const strike = dl.done ? 'text-decoration: line-through; color: var(--text-muted);' : '';
+                
+                container.innerHTML += `
+                    <div class="task-row" style="background: rgba(255,255,255,0.01)">
+                        <div class="task-left">
+                            <input type="checkbox" ${checked} onchange="toggleDeadlineStatus(${idx})" style="width:auto; margin-bottom:0; cursor:pointer;">
+                            <div class="task-content-block" style="${strike}">
+                                <div style="display:flex; align-items:center; gap:6px;">
+                                    ${badge} <span style="font-weight:600; color:#fff;">${subjectsMapping[dl.subject]}</span>
+                                </div>
+                                <div style="font-size:0.85rem; margin-top:2px;">${dl.title} &bull; <span style="color:var(--orange)">Due: ${dl.date}</span></div>
+                            </div>
+                        </div>
+                        <button class="del-btn" onclick="deleteDeadlineTarget(${idx})">Cancel Target</button>
+                    </div>
+                `;
+            });
         }
 
         function createBlockPlan() {
@@ -480,7 +652,7 @@
             let breakInput = parseInt(document.getElementById('custom-break-time').value);
             db.timerConfig.focusMins = isNaN(focusInput) ? 25 : focusInput;
             db.timerConfig.breakMins = isNaN(breakInput) ? 5 : breakInput;
-            localStorage.setItem('ca_space_db_v5', JSON.stringify(db));
+            localStorage.setItem('ca_space_db_v7', JSON.stringify(db));
             if(!timerInterval) { isBreakMode = false; timeRemaining = db.timerConfig.focusMins * 60; updateTimerDisplay(); }
         }
 
@@ -507,7 +679,7 @@
                             text: `Pomodoro Focus Session Completed (${loggedMins} mins)`,
                             hours: finalHours,
                             subjectKey: selectedSubj,
-                            completed: true // Pomodoro sessions default to finished checkboxes
+                            completed: true
                         });
                         
                         timeRemaining = db.timerConfig.breakMins * 60;
