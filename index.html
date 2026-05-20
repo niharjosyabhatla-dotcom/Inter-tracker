@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CA Inter Space - Calendar & Subject Planner</title>
+    <title>ICAI Inter Command Space</title>
     <style>
         :root {
             --bg: #0b0f19;
@@ -19,14 +19,19 @@
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
         body { background-color: var(--bg); color: var(--text); display: flex; min-height: 100vh; }
         
-        /* Layout Sidebar Menu */
-        aside { width: 250px; background: rgba(10, 15, 30, 0.85); border-right: 1px solid var(--border); padding: 24px; display: flex; flex-direction: column; gap: 24px; }
+        /* Layout Sidebar Setup */
+        aside { width: 280px; background: rgba(10, 15, 30, 0.9); border-right: 1px solid var(--border); padding: 20px; display: flex; flex-direction: column; gap: 20px; height: 100vh; overflow-y: auto; position: sticky; top: 0; }
         main { flex: 1; padding: 28px; max-width: 1100px; width: 100%; margin: 0 auto; overflow-y: auto; }
         
         .brand h1 { font-size: 1.2rem; font-weight: 700; color: #fff; letter-spacing: -0.02em; }
         .brand p { font-size: 0.75rem; color: var(--text-muted); margin-top: 2px; }
         
-        .nav-btn { width: 100%; text-align: left; padding: 12px; background: none; border: none; color: var(--text-muted); border-radius: 8px; font-size: 0.95rem; font-weight: 500; cursor: pointer; transition: all 0.2s; margin-bottom: 6px; }
+        /* Exam Countdown Widgets */
+        .countdown-box { background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 8px; padding: 10px; margin-top: 4px; }
+        .countdown-title { font-size: 0.75rem; font-weight: 600; color: #fff; display: flex; justify-content: space-between; }
+        .countdown-days { font-size: 0.85rem; color: var(--orange); font-weight: 700; }
+        
+        .nav-btn { width: 100%; text-align: left; padding: 12px; background: none; border: none; color: var(--text-muted); border-radius: 8px; font-size: 0.95rem; font-weight: 500; cursor: pointer; transition: all 0.2s; margin-bottom: 4px; }
         .nav-btn.active, .nav-btn:hover { background: rgba(59, 130, 246, 0.12); color: var(--blue); }
         
         .view-section { display: none; }
@@ -35,7 +40,7 @@
         .box { background: var(--card); border: 1px solid var(--border); padding: 20px; border-radius: 12px; margin-bottom: 24px; }
         .box h3 { font-size: 1rem; font-weight: 600; margin-bottom: 16px; color: #fff; display: flex; justify-content: space-between; align-items: center; }
         
-        /* Interactive Calendar Grid */
+        /* Calendar UI Components */
         .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; text-align: center; }
         .weekday-label { font-size: 0.75rem; color: var(--text-muted); font-weight: 600; padding: 4px 0; }
@@ -47,45 +52,49 @@
         
         .calendar-layout { display: grid; grid-template-columns: 1.2fr 1fr; gap: 24px; }
         
-        /* Inputs & Interfaces */
         select, input, textarea { width: 100%; padding: 10px; background: #111827; border: 1px solid var(--border); color: #fff; border-radius: 8px; font-size: 0.9rem; margin-bottom: 12px; }
-        input:focus, select:focus, textarea:focus { border-color: var(--blue); outline: none; }
         .action-btn { background: var(--blue); border: none; color: white; padding: 11px; border-radius: 8px; font-weight: 600; cursor: pointer; width: 100%; font-size: 0.9rem; }
-        .action-btn:active { opacity: 0.8; }
         
-        /* Task Cards */
-        .task-row { display: flex; justify-content: space-between; align-items: flex-start; padding: 12px; background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 8px; font-size: 0.9rem; gap: 8px; }
-        .task-left { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+        /* Task Checkbox Row Layout */
+        .task-row { display: flex; justify-content: space-between; align-items: center; padding: 12px; background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 8px; font-size: 0.9rem; gap: 10px; }
+        .task-left { display: flex; align-items: center; gap: 10px; flex: 1; }
+        .task-checkbox-btn { background: none; border: 2px solid var(--border); width: 18px; height: 18px; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: transparent; font-size: 0.7rem; font-weight: bold; transition: all 0.2s; }
+        .task-checkbox-btn.completed { background: var(--emerald); border-color: var(--emerald); color: #fff; }
+        .task-content-block { display: flex; flex-direction: column; gap: 2px; }
         .task-meta-tags { display: flex; gap: 6px; align-items: center; }
         .task-hours { font-size: 0.7rem; background: rgba(59, 130, 246, 0.15); color: var(--blue); padding: 2px 6px; border-radius: 4px; font-weight: 700; }
         .task-subj-tag { font-size: 0.7rem; background: rgba(16, 185, 129, 0.12); color: var(--emerald); padding: 2px 6px; border-radius: 4px; font-weight: 600; }
-        .del-btn { background: none; border: none; color: var(--red); cursor: pointer; font-size: 0.8rem; padding: 2px 4px; }
+        .del-btn { background: none; border: none; color: var(--red); cursor: pointer; font-size: 0.8rem; }
         
-        /* Block Framework Profiles */
-        .block-card { background: rgba(255,255,255,0.01); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 14px; position: relative; }
-        .block-title { font-weight: 600; color: #fff; font-size: 1rem; margin-bottom: 4px; }
-        .block-dates { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 10px; }
-        .block-task-item { font-size: 0.85rem; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.03); display: flex; justify-content: space-between; }
-        
-        /* Pomodoro Display Engine */
-        .timer-display { font-size: 4.5rem; font-weight: 800; text-align: center; margin: 16px 0; font-variant-numeric: tabular-nums; color: var(--orange); letter-spacing: -0.02em; }
+        /* Subject Stats List Display */
+        .stat-grid { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
+        .stat-row { display: flex; justify-content: space-between; font-size: 0.8rem; padding: 6px 8px; background: rgba(255,255,255,0.01); border: 1px solid var(--border); border-radius: 6px; }
+        .stat-hours-count { font-weight: 700; color: var(--blue); }
+
+        /* Pomodoro Custom Elements */
+        .timer-display { font-size: 4.5rem; font-weight: 800; text-align: center; margin: 16px 0; font-variant-numeric: tabular-nums; color: var(--orange); }
         .timer-controls { display: flex; gap: 12px; margin-top: 16px; }
         .timer-settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; background: rgba(255,255,255,0.01); padding: 14px; border-radius: 8px; border: 1px solid var(--border); }
         .timer-settings-grid label { font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px; }
-        .timer-status-indicator { text-align: center; font-size: 0.9rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--emerald); margin-top: 4px; }
     </style>
 </head>
 <body>
 
     <aside>
         <div class="brand">
-            <h1>CA Inter Space</h1>
-            <p>Schedule & Block Planner</p>
+            <h1>CA Inter Tracker</h1>
+            <p>Target Countdown Console</p>
         </div>
-        <nav>
+        
+        <div style="margin: 6px 0;">
+            <p style="font-size:0.7rem; color:var(--text-muted); text-transform:uppercase; font-weight:700; letter-spacing:0.05em;">Exam Timeline Countdown</p>
+            <div id="countdown-list-container" style="display:flex; flex-direction:column; gap:6px; margin-top:6px;"></div>
+        </div>
+
+        <nav style="margin-top:auto;">
             <button class="nav-btn active" id="btn-calendar" onclick="switchView('calendar-view')">Daily Calendar</button>
-            <button class="nav-btn" id="btn-planner" onclick="switchView('planner-view')">Block Timeline Planner</button>
-            <button class="nav-btn" id="btn-pomodoro" onclick="switchView('pomodoro-view')">Adjustable Pomodoro</button>
+            <button class="nav-btn" id="btn-planner" onclick="switchView('planner-view')">Block Planner</button>
+            <button class="nav-btn" id="btn-pomodoro" onclick="switchView('pomodoro-view')">Sync Pomodoro</button>
         </nav>
     </aside>
 
@@ -97,41 +106,44 @@
                         <div class="calendar-header">
                             <h2 id="month-year-label" style="font-size:1.1rem; font-weight:700;"></h2>
                             <div style="display:flex; gap:6px;">
-                                <button class="action-btn" style="padding:6px 12px;" onclick="moveMonth(-1)">&larr;</button>
-                                <button class="action-btn" style="padding:6px 12px;" onclick="moveMonth(1)">&rarr;</button>
+                                <button class="action-btn" style="padding:6px 12px; background:none; border:1px solid var(--border);" onclick="moveMonth(-1)">&larr;</button>
+                                <button class="action-btn" style="padding:6px 12px; background:none; border:1px solid var(--border);" onclick="moveMonth(1)">&rarr;</button>
                             </div>
                         </div>
                         <div class="calendar-grid" id="weekday-labels-row"></div>
                         <div class="calendar-grid" id="calendar-cells-grid" style="margin-top:8px;"></div>
+                    </div>
+
+                    <div class="box">
+                        <h3>Subject Preparation Hours (Total Breakdown)</h3>
+                        <div class="stat-grid" id="subject-statistics-breakdown"></div>
                     </div>
                 </div>
 
                 <div>
                     <div class="box">
                         <h3 id="selected-date-title">Select a Date</h3>
-                        
                         <div style="margin-top:12px;">
                             <label style="font-size:0.75rem; color:var(--text-muted);">Select Target Subject</label>
                             <select id="day-subject-select">
-                                <option value="aa">Advanced Accounting</option>
-                                <option value="law">Corporate and Other Laws</option>
-                                <option value="tax">Taxation (IT + GST)</option>
-                                <option value="cma">Cost & Management Accounting</option>
-                                <option value="audit">Auditing and Ethics</option>
-                                <option value="fmsm">FM & Strategic Management</option>
+                                <option value="aa">Paper 1: Advanced Accounting</option>
+                                <option value="law">Paper 2: Corporate and Other Laws</option>
+                                <option value="tax">Paper 3: Taxation (IT + GST)</option>
+                                <option value="cma">Paper 4: Cost & Management Accounting</option>
+                                <option value="audit">Paper 5: Auditing and Ethics</option>
+                                <option value="fmsm">Paper 6: FM & Strategic Management</option>
                             </select>
 
-                            <label style="font-size:0.75rem; color:var(--text-muted);">Task Ledger Details</label>
-                            <input type="text" id="day-task-input" placeholder="e.g. Solved Audit Sampling Past Year Questions">
+                            <label style="font-size:0.75rem; color:var(--text-muted);">Task Description / Chapter Details</label>
+                            <input type="text" id="day-task-input" placeholder="e.g. Completed Audit Sampling Questions">
                             
                             <label style="font-size:0.75rem; color:var(--text-muted);">Study Time Hours</label>
-                            <input type="number" id="day-hours-input" step="0.5" placeholder="Hours logged (e.g. 3.0)">
+                            <input type="number" id="day-hours-input" step="0.5" placeholder="e.g. 2.5">
                             
-                            <button class="action-btn" onclick="saveDayTask()">Commit Daily Log</button>
+                            <button class="action-btn" onclick="saveDayTask()">Commit Daily Task Log</button>
                         </div>
-                        
                         <div style="margin-top:24px;">
-                            <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:10px;">Logged Entries For Selected Date</p>
+                            <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:10px;">Task Check-list Ledger For Selected Date</p>
                             <div id="day-tasks-container"></div>
                         </div>
                     </div>
@@ -145,14 +157,14 @@
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
                     <div>
                         <label style="font-size:0.75rem; color:var(--text-muted)">Block Plan Title</label>
-                        <input type="text" id="block-title-input" placeholder="e.g., First Revision Group 1">
+                        <input type="text" id="block-title-input" placeholder="e.g., First Revision Block">
                     </div>
                     <div>
                         <label style="font-size:0.75rem; color:var(--text-muted)">Subject Target Group</label>
                         <select id="block-subject-select">
                             <option value="aa">Advanced Accounting</option>
                             <option value="law">Corporate and Other Laws</option>
-                            <option value="tax">Taxation (IT + GST)</option>
+                            <option value="tax">Taxation</option>
                             <option value="cma">Cost & Management Accounting</option>
                             <option value="audit">Auditing and Ethics</option>
                             <option value="fmsm">FM & Strategic Management</option>
@@ -170,7 +182,7 @@
                     </div>
                 </div>
                 <label style="font-size:0.75rem; color:var(--text-muted)">Target Core Tasks (One task per line)</label>
-                <textarea id="block-tasks-textarea" rows="3" placeholder="Line 1: Complete Capital Budgeting&#10;Line 2: Practice RTP questions"></textarea>
+                <textarea id="block-tasks-textarea" rows="3" placeholder="Line 1: Complete Study Material Problems"></textarea>
                 <button class="action-btn" style="background:var(--emerald)" onclick="createBlockPlan()">Commit Block Matrix</button>
             </div>
             <div class="box">
@@ -181,7 +193,7 @@
 
         <div id="pomodoro-view" class="view-section">
             <div class="box" style="max-width: 550px; margin: 0 auto;">
-                <h3>Focus Interval Engine</h3>
+                <h3>Focus Interval Engine (Auto-Sync)</h3>
                 <div class="timer-settings-grid">
                     <div>
                         <label for="custom-focus-time">Focus Block (Minutes)</label>
@@ -192,62 +204,87 @@
                         <input type="number" id="custom-break-time" value="5" min="1" max="60" onchange="adjustTimerSettings()">
                     </div>
                 </div>
-                <div class="timer-status-indicator" id="timer-status-text">Focus Period</div>
+
+                <label style="font-size:0.75rem; color:var(--text-muted);">Target Subject for Active Focus Session</label>
+                <select id="pomo-subject-select" style="margin-bottom:20px;">
+                    <option value="aa">Paper 1: Advanced Accounting</option>
+                    <option value="law">Paper 2: Corporate and Other Laws</option>
+                    <option value="tax">Paper 3: Taxation (IT + GST)</option>
+                    <option value="cma">Paper 4: Cost & Management Accounting</option>
+                    <option value="audit">Paper 5: Auditing and Ethics</option>
+                    <option value="fmsm">Paper 6: FM & Strategic Management</option>
+                </select>
+
+                <div id="timer-status-text" style="text-align:center; font-size:0.9rem; font-weight:600; text-transform:uppercase; color:var(--orange);">Focus Period</div>
                 <div class="timer-display" id="timer-clock">25:00</div>
+                
                 <div class="timer-controls">
                     <button class="action-btn" style="background:var(--emerald)" onclick="startTimer()">Start Session</button>
                     <button class="action-btn" style="background:var(--orange)" onclick="pauseTimer()">Pause</button>
                     <button class="action-btn" style="background:rgba(255,255,255,0.1); color: #fff;" onclick="resetTimer()">Reset</button>
                 </div>
+                <p style="font-size:0.75rem; color:var(--text-muted); text-align:center; margin-top:16px;">💡 Completing a session will auto-log hours to today's date in the calendar.</p>
             </div>
         </div>
     </main>
 
     <script>
-        // Data Subject Mapping Config
         const subjectsMapping = {
-            aa: "Advanced Accounting", 
-            law: "Corporate and Other Laws", 
-            tax: "Taxation (IT + GST)",
-            cma: "Cost & Management Accounting", 
-            audit: "Auditing and Ethics", 
-            fmsm: "FM & Strategic Management"
+            aa: "Advanced Accounting", law: "Corporate and Other Laws", tax: "Taxation (IT + GST)",
+            cma: "Cost & Management Accounting", audit: "Auditing and Ethics", fmsm: "FM & Strategic Management"
         };
 
-        let db = {
-            calendarData: {}, // Format: {"YYYY-MM-DD": [{id, text, hours, subjectKey}]}
-            blocks: [],
-            timerConfig: { focusMins: 25, breakMins: 5 }
-        };
+        const examDates = [
+            { name: "P1: Adv Accounting", date: "2026-09-01" },
+            { name: "P2: Corporate Law", date: "2026-09-03" },
+            { name: "P3: Taxation", date: "2026-09-06" },
+            { name: "P4: Cost & Mgmt", date: "2026-09-08" },
+            { name: "P5: Audit & Ethics", date: "2026-09-10" },
+            { name: "P6: FM & SM", date: "2026-09-12" }
+        ];
 
+        let db = { calendarData: {}, blocks: [], timerConfig: { focusMins: 25, breakMins: 5 } };
         let currentNavDate = new Date();
         let selectedDateStr = new Date().toISOString().split('T')[0];
-        
-        let timerInterval = null;
-        let timeRemaining = 25 * 60;
-        let isBreakMode = false;
+        let timerInterval = null, timeRemaining = 25 * 60, isBreakMode = false;
 
         function switchView(viewId) {
             document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
             document.getElementById(viewId).classList.add('active');
-            
             if (viewId === 'calendar-view') document.getElementById('btn-calendar').classList.add('active');
             if (viewId === 'planner-view') document.getElementById('btn-planner').classList.add('active');
             if (viewId === 'pomodoro-view') document.getElementById('btn-pomodoro').classList.add('active');
         }
 
-        function initData() {
-            const saved = localStorage.getItem('ca_space_db_v3');
-            if (saved) { 
-                const parsed = JSON.parse(saved);
-                if (parsed) {
-                    db = parsed;
-                    if (!db.blocks || Array.isArray(db.blocks)) { db.blocks = []; }
-                    if (!db.timerConfig) { db.timerConfig = { focusMins: 25, breakMins: 5 }; }
-                }
-            }
+        function updateCountdowns() {
+            const container = document.getElementById('countdown-list-container');
+            container.innerHTML = '';
+            const today = new Date();
             
+            examDates.forEach(exam => {
+                const examTarget = new Date(exam.date + "T00:00:00");
+                const diffTime = examTarget - today;
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                const displayDays = diffDays > 0 ? `${diffDays} days left` : "Exam Day / Passed";
+                
+                container.innerHTML += `
+                    <div class="countdown-box">
+                        <div class="countdown-title">
+                            <span>${exam.name}</span>
+                            <span class="countdown-days">${displayDays}</span>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function initData() {
+            const saved = localStorage.getItem('ca_space_db_v5');
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                if (parsed) { db = parsed; if (!db.blocks) db.blocks = []; }
+            }
             document.getElementById('custom-focus-time').value = db.timerConfig.focusMins;
             document.getElementById('custom-break-time').value = db.timerConfig.breakMins;
             timeRemaining = db.timerConfig.focusMins * 60;
@@ -255,6 +292,8 @@
             const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
             document.getElementById('weekday-labels-row').innerHTML = days.map(d => `<div class="weekday-label">${d}</div>`).join('');
             
+            updateCountdowns();
+            setInterval(updateCountdowns, 60000);
             updateTimerDisplay();
             renderCalendar();
             renderSelectedDayView();
@@ -262,21 +301,16 @@
         }
 
         function saveAndRefresh() {
-            localStorage.setItem('ca_space_db_v3', JSON.stringify(db));
+            localStorage.setItem('ca_space_db_v5', JSON.stringify(db));
             renderCalendar();
             renderSelectedDayView();
             renderBlocks();
         }
 
-        // Calendar Grid Engine
-        function moveMonth(dir) {
-            currentNavDate.setMonth(currentNavDate.getMonth() + dir);
-            renderCalendar();
-        }
+        function moveMonth(dir) { currentNavDate.setMonth(currentNavDate.getMonth() + dir); renderCalendar(); }
 
         function renderCalendar() {
-            const year = currentNavDate.getFullYear();
-            const month = currentNavDate.getMonth();
+            const year = currentNavDate.getFullYear(), month = currentNavDate.getMonth();
             const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
             document.getElementById('month-year-label').innerText = `${monthNames[month]} ${year}`;
             
@@ -286,20 +320,16 @@
             gridContainer.innerHTML = '';
             
             for(let i = 0; i < firstDayIdx; i++) { gridContainer.innerHTML += `<div></div>`; }
-            
             for(let day = 1; day <= totalDays; day++) {
                 const mapMonth = (month + 1).toString().padStart(2, '0');
                 const mapDay = day.toString().padStart(2, '0');
                 const loopDateStr = `${year}-${mapMonth}-${mapDay}`;
-                
                 const hasDataClass = db.calendarData[loopDateStr] && db.calendarData[loopDateStr].length > 0 ? 'has-data' : '';
                 const activeClass = loopDateStr === selectedDateStr ? 'active' : '';
                 
                 let dailyHoursSum = 0;
-                if(db.calendarData[loopDateStr]) {
-                    db.calendarData[loopDateStr].forEach(t => dailyHoursSum += parseFloat(t.hours || 0));
-                }
-                const displayHours = dailyHoursSum > 0 ? `<span class="day-hours-badge">${dailyHoursSum}h</span>` : '<span></span>';
+                if(db.calendarData[loopDateStr]) { db.calendarData[loopDateStr].forEach(t => dailyHoursSum += parseFloat(t.hours || 0)); }
+                const displayHours = dailyHoursSum > 0 ? `<span class="day-hours-badge">${dailyHoursSum.toFixed(1)}h</span>` : '<span></span>';
 
                 gridContainer.innerHTML += `
                     <div class="day-cell ${activeClass} ${hasDataClass}" onclick="selectDate('${loopDateStr}')">
@@ -308,59 +338,82 @@
                     </div>
                 `;
             }
+            renderSubjectMetrics();
         }
 
-        function selectDate(dateStr) {
-            selectedDateStr = dateStr;
-            renderCalendar();
-            renderSelectedDayView();
+        // Feature Calculation: Compile Metrics for Each Individual Subject
+        function renderSubjectMetrics() {
+            const statsContainer = document.getElementById('subject-statistics-breakdown');
+            statsContainer.innerHTML = '';
+            
+            let subjectHoursTracker = { aa: 0, law: 0, tax: 0, cma: 0, audit: 0, fmsm: 0 };
+            
+            Object.keys(db.calendarData).forEach(dateKey => {
+                db.calendarData[dateKey].forEach(task => {
+                    if (subjectHoursTracker[task.subjectKey] !== undefined) {
+                        subjectHoursTracker[task.subjectKey] += parseFloat(task.hours || 0);
+                    }
+                });
+            });
+
+            Object.keys(subjectsMapping).forEach(key => {
+                const totalHoursMapped = subjectHoursTracker[key].toFixed(2);
+                statsContainer.innerHTML += `
+                    <div class="stat-row">
+                        <span>${subjectsMapping[key]}</span>
+                        <span class="stat-hours-count">${totalHoursMapped} Hours</span>
+                    </div>
+                `;
+            });
         }
+
+        function selectDate(dateStr) { selectedDateStr = dateStr; renderCalendar(); renderSelectedDayView(); }
 
         function renderSelectedDayView() {
             const parsedDate = new Date(selectedDateStr + "T00:00:00");
-            const formatStr = parsedDate.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
-            document.getElementById('selected-date-title').innerText = formatStr;
-            
+            document.getElementById('selected-date-title').innerText = parsedDate.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
             const container = document.getElementById('day-tasks-container');
             container.innerHTML = '';
             
             const entries = db.calendarData[selectedDateStr] || [];
-            if(entries.length === 0) {
-                container.innerHTML = `<p style="font-size:0.85rem; color:var(--text-muted)">No entries recorded for this day.</p>`;
-                return;
-            }
+            if(entries.length === 0) { container.innerHTML = `<p style="font-size:0.85rem; color:var(--text-muted)">No entries logged for this day.</p>`; return; }
             
             entries.forEach((entry, idx) => {
-                const subjName = subjectsMapping[entry.subjectKey] || "General Study";
+                const checkedClass = entry.completed ? 'completed' : '';
+                const strikeStyle = entry.completed ? 'text-decoration: line-through; color: var(--text-muted);' : 'color:#fff;';
+                const checkboxIcon = entry.completed ? '✓' : '';
+
                 container.innerHTML += `
                     <div class="task-row">
                         <div class="task-left">
-                            <div class="task-meta-tags">
-                                <span class="task-subj-tag">${subjName}</span>
-                                <span class="task-hours">${entry.hours}h</span>
+                            <button class="task-checkbox-btn ${checkedClass}" onclick="toggleTaskCompletion(${idx})">${checkboxIcon}</button>
+                            <div class="task-content-block">
+                                <div class="task-meta-tags">
+                                    <span class="task-subj-tag">${subjectsMapping[entry.subjectKey] || "Study Block"}</span>
+                                    <span class="task-hours">${entry.hours}h</span>
+                                </div>
+                                <span style="font-weight: 500; margin-top:2px; ${strikeStyle}">${entry.text}</span>
                             </div>
-                            <span style="color:#fff; font-weight: 500; margin-top:2px;">${entry.text}</span>
                         </div>
-                        <button class="del-btn" onclick="deleteDayTask(${idx})">Delete</button>
+                        <button class="del-btn" onclick="deleteDayTask('${idx}')">Delete</button>
                     </div>
                 `;
             });
+        }
+
+        function toggleTaskCompletion(idx) {
+            db.calendarData[selectedDateStr][idx].completed = !db.calendarData[selectedDateStr][idx].completed;
+            saveAndRefresh();
         }
 
         function saveDayTask() {
             const textVal = document.getElementById('day-task-input').value.trim();
             const hoursVal = parseFloat(document.getElementById('day-hours-input').value);
             const subjectKey = document.getElementById('day-subject-select').value;
-            
             if(!textVal || isNaN(hoursVal) || hoursVal <= 0) return;
             
             if(!db.calendarData[selectedDateStr]) { db.calendarData[selectedDateStr] = []; }
-            db.calendarData[selectedDateStr].push({ 
-                text: textVal, 
-                hours: hoursVal,
-                subjectKey: subjectKey 
-            });
-            
+            db.calendarData[selectedDateStr].push({ text: textVal, hours: hoursVal, subjectKey: subjectKey, completed: false });
             document.getElementById('day-task-input').value = '';
             document.getElementById('day-hours-input').value = '';
             saveAndRefresh();
@@ -368,58 +421,39 @@
 
         function deleteDayTask(idx) {
             db.calendarData[selectedDateStr].splice(idx, 1);
-            if(db.calendarData[selectedDateStr].length === 0) { delete db.calendarData[selectedDateStr]; }
+            if(db.calendarData[selectedDateStr].length === 0) delete db.calendarData[selectedDateStr];
             saveAndRefresh();
         }
 
-        // Timeline Block Framework Execution
         function createBlockPlan() {
             const title = document.getElementById('block-title-input').value.trim();
             const subj = document.getElementById('block-subject-select').value;
-            const start = document.getElementById('block-start-date').value;
-            const end = document.getElementById('block-end-date').value;
+            const start = document.getElementById('block-start-date').value, end = document.getElementById('block-end-date').value;
             const rawTasks = document.getElementById('block-tasks-textarea').value.split('\n');
-            
-            if(!title || !start || !end) { alert("Please complete the Plan Title, Start, and End dates."); return; }
+            if(!title || !start || !end) { alert("Please fill Title, Start, and End dates."); return; }
             
             const tasksArray = [];
             rawTasks.forEach(t => { if(t.trim()) tasksArray.push({ text: t.trim(), done: false }); });
-            
-            db.blocks.push({
-                id: Math.random().toString(36).substring(2, 7),
-                title: title, subject: subj, start: start, end: end, tasks: tasksArray
-            });
-            
+            db.blocks.push({ id: Math.random().toString(36).substring(2, 7), title: title, subject: subj, start: start, end: end, tasks: tasksArray });
             document.getElementById('block-title-input').value = '';
             document.getElementById('block-tasks-textarea').value = '';
             saveAndRefresh();
         }
 
-        function toggleBlockTask(blockIdx, taskIdx) {
-            db.blocks[blockIdx].tasks[taskIdx].done = !db.blocks[blockIdx].tasks[taskIdx].done;
-            saveAndRefresh();
-        }
-
-        function deleteBlockPlan(blockIdx) {
-            db.blocks.splice(blockIdx, 1);
-            saveAndRefresh();
-        }
+        function toggleBlockTask(bIdx, tIdx) { db.blocks[bIdx].tasks[tIdx].done = !db.blocks[bIdx].tasks[tIdx].done; saveAndRefresh(); }
+        function deleteBlockPlan(bIdx) { db.blocks.splice(bIdx, 1); saveAndRefresh(); }
 
         function renderBlocks() {
-            const container = document.getElementById('blocks-container');
-            container.innerHTML = '';
-            if(db.blocks.length === 0) {
-                container.innerHTML = `<p style="font-size:0.85rem; color:var(--text-muted)">No phase planning blocks structured yet.</p>`;
-                return;
-            }
+            const container = document.getElementById('blocks-container'); container.innerHTML = '';
+            if(db.blocks.length === 0) { container.innerHTML = `<p style="font-size:0.85rem; color:var(--text-muted)">No phase blocks created.</p>`; return; }
             db.blocks.forEach((block, bIdx) => {
                 let tasksHTML = '';
                 block.tasks.forEach((task, tIdx) => {
                     const checked = task.done ? 'checked' : '';
-                    const strikeStyle = task.done ? 'text-decoration:line-through; color:var(--text-muted);' : '';
+                    const strike = task.done ? 'text-decoration:line-through; color:var(--text-muted);' : '';
                     tasksHTML += `
                         <div class="block-task-item">
-                            <label style="display:flex; gap:8px; align-items:center; cursor:pointer; ${strikeStyle}">
+                            <label style="display:flex; gap:8px; align-items:center; cursor:pointer; ${strike}">
                                 <input type="checkbox" ${checked} onchange="toggleBlockTask(${bIdx}, ${tIdx})" style="width:auto; margin-bottom:0;">
                                 ${task.text}
                             </label>
@@ -431,67 +465,61 @@
                         <div style="display:flex; justify-content:space-between; align-items:flex-start;">
                             <div>
                                 <div class="block-title">${block.title}</div>
-                                <div class="block-dates">${subjectsMapping[block.subject]} &bull; From ${block.start} to ${block.end}</div>
+                                <div class="block-dates">${subjectsMapping[block.subject]} &bull; ${block.start} to ${block.end}</div>
                             </div>
-                            <button class="del-btn" onclick="deleteBlockPlan(${bIdx})">Remove Block</button>
+                            <button class="del-btn" onclick="deleteBlockPlan(${bIdx})">Remove</button>
                         </div>
-                        <div style="margin-top:10px; background:rgba(0,0,0,0.15); padding:10px; border-radius:8px;">
-                            ${tasksHTML || '<p style="font-size:0.8rem; color:var(--text-muted)">No target tasks queued in this timeline node.</p>'}
-                        </div>
+                        <div style="margin-top:10px; background:rgba(0,0,0,0.15); padding:10px; border-radius:8px;">${tasksHTML}</div>
                     </div>
                 `;
             });
         }
 
-        // Adjustable Pomodoro Engine
         function adjustTimerSettings() {
             let focusInput = parseInt(document.getElementById('custom-focus-time').value);
             let breakInput = parseInt(document.getElementById('custom-break-time').value);
-            
-            if(isNaN(focusInput) || focusInput < 1) focusInput = 25;
-            if(isNaN(breakInput) || breakInput < 1) breakInput = 5;
-            
-            db.timerConfig.focusMins = focusInput;
-            db.timerConfig.breakMins = breakInput;
-            localStorage.setItem('ca_space_db_v3', JSON.stringify(db));
-            
-            if(!timerInterval) {
-                isBreakMode = false;
-                timeRemaining = db.timerConfig.focusMins * 60;
-                document.getElementById('timer-status-text').innerText = "Focus Period";
-                document.getElementById('timer-status-text').style.color = "var(--orange)";
-                updateTimerDisplay();
-            }
+            db.timerConfig.focusMins = isNaN(focusInput) ? 25 : focusInput;
+            db.timerConfig.breakMins = isNaN(breakInput) ? 5 : breakInput;
+            localStorage.setItem('ca_space_db_v5', JSON.stringify(db));
+            if(!timerInterval) { isBreakMode = false; timeRemaining = db.timerConfig.focusMins * 60; updateTimerDisplay(); }
         }
 
         function updateTimerDisplay() {
-            const m = Math.floor(timeRemaining / 60).toString().padStart(2, '0');
-            const s = (timeRemaining % 60).toString().padStart(2, '0');
-            document.getElementById('timer-clock').innerText = `${m}:${s}`;
+            document.getElementById('timer-clock').innerText = `${Math.floor(timeRemaining / 60).toString().padStart(2, '0')}:${(timeRemaining % 60).toString().padStart(2, '0')}`;
         }
 
         function startTimer() {
             if (timerInterval) return;
             timerInterval = setInterval(() => {
-                if (timeRemaining > 0) {
-                    timeRemaining--;
-                    updateTimerDisplay();
-                } else {
-                    clearInterval(timerInterval);
-                    timerInterval = null;
-                    
+                if (timeRemaining > 0) { timeRemaining--; updateTimerDisplay(); } 
+                else {
+                    clearInterval(timerInterval); timerInterval = null;
                     if(!isBreakMode) {
                         isBreakMode = true;
+                        
+                        const todayStr = new Date().toISOString().split('T')[0];
+                        const loggedMins = db.timerConfig.focusMins;
+                        const finalHours = parseFloat((loggedMins / 60).toFixed(2));
+                        const selectedSubj = document.getElementById('pomo-subject-select').value;
+                        
+                        if(!db.calendarData[todayStr]) { db.calendarData[todayStr] = []; }
+                        db.calendarData[todayStr].push({
+                            text: `Pomodoro Focus Session Completed (${loggedMins} mins)`,
+                            hours: finalHours,
+                            subjectKey: selectedSubj,
+                            completed: true // Pomodoro sessions default to finished checkboxes
+                        });
+                        
                         timeRemaining = db.timerConfig.breakMins * 60;
                         document.getElementById('timer-status-text').innerText = "Break Interval Active";
                         document.getElementById('timer-status-text').style.color = "var(--emerald)";
-                        alert("Focus Sprint Finished! Enjoy your configured rest block.");
+                        saveAndRefresh();
+                        alert(`Session Complete! Auto-logged ${finalHours} hours to today's database.`);
                     } else {
-                        isBreakMode = false;
-                        timeRemaining = db.timerConfig.focusMins * 60;
+                        isBreakMode = false; timeRemaining = db.timerConfig.focusMins * 60;
                         document.getElementById('timer-status-text').innerText = "Focus Period";
                         document.getElementById('timer-status-text').style.color = "var(--orange)";
-                        alert("Break completed. Time to lock back into study rotation!");
+                        alert("Break over! Ready for the next stretch?");
                     }
                     updateTimerDisplay();
                 }
@@ -499,15 +527,7 @@
         }
 
         function pauseTimer() { clearInterval(timerInterval); timerInterval = null; }
-        
-        function resetTimer() {
-            pauseTimer();
-            isBreakMode = false;
-            timeRemaining = db.timerConfig.focusMins * 60;
-            document.getElementById('timer-status-text').innerText = "Focus Period";
-            document.getElementById('timer-status-text').style.color = "var(--orange)";
-            updateTimerDisplay();
-        }
+        function resetTimer() { pauseTimer(); isBreakMode = false; timeRemaining = db.timerConfig.focusMins * 60; updateTimerDisplay(); }
 
         initData();
     </script>
