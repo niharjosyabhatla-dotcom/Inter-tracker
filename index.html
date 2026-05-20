@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CA Inter Tracker - Fully Loaded</title>
+    <title>CA Inter Space - Calendar & Subject Planner</title>
     <style>
         :root {
             --bg: #0b0f19;
             --card: rgba(255, 255, 255, 0.03);
-            --border: rgba(255, 255, 255, 0.07);
+            --border: rgba(255, 255, 255, 0.08);
             --text: #f3f4f6;
             --text-muted: #9ca3af;
             --blue: #3b82f6;
@@ -19,242 +19,450 @@
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
         body { background-color: var(--bg); color: var(--text); display: flex; min-height: 100vh; }
         
-        /* Layout Sidebar & Main Content */
-        aside { width: 240px; background: rgba(10, 15, 30, 0.8); border-r: 1px solid var(--border); border-right: 1px solid var(--border); padding: 20px; display: flex; flex-direction: column; gap: 20px; }
-        main { flex: 1; padding: 24px; max-width: 1000px; width: 100%; margin: 0 auto; overflow-y: auto; }
+        /* Layout Sidebar Menu */
+        aside { width: 250px; background: rgba(10, 15, 30, 0.85); border-right: 1px solid var(--border); padding: 24px; display: flex; flex-direction: column; gap: 24px; }
+        main { flex: 1; padding: 28px; max-width: 1100px; width: 100%; margin: 0 auto; overflow-y: auto; }
         
-        .brand h1 { font-size: 1.1rem; font-weight: 700; color: #fff; }
-        .brand p { font-size: 0.75rem; color: var(--text-muted); }
+        .brand h1 { font-size: 1.2rem; font-weight: 700; color: #fff; letter-spacing: -0.02em; }
+        .brand p { font-size: 0.75rem; color: var(--text-muted); margin-top: 2px; }
         
-        .nav-btn { width: 100%; text-align: left; padding: 10px 12px; background: none; border: none; color: var(--text-muted); border-radius: 8px; font-size: 0.9rem; font-weight: 500; cursor: pointer; transition: all 0.2s; margin-bottom: 4px; }
-        .nav-btn.active, .nav-btn:hover { background: rgba(59, 130, 246, 0.15); color: var(--blue); }
+        .nav-btn { width: 100%; text-align: left; padding: 12px; background: none; border: none; color: var(--text-muted); border-radius: 8px; font-size: 0.95rem; font-weight: 500; cursor: pointer; transition: all 0.2s; margin-bottom: 6px; }
+        .nav-btn.active, .nav-btn:hover { background: rgba(59, 130, 246, 0.12); color: var(--blue); }
         
         .view-section { display: none; }
         .view-section.active { display: block; }
         
-        /* Universal Cards & Grid */
-        .grid-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 24px; }
-        .card { background: var(--card); border: 1px solid var(--border); padding: 16px; border-radius: 12px; }
-        .card p { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
-        .card h2 { font-size: 1.75rem; font-weight: 800; margin-top: 4px; }
+        .box { background: var(--card); border: 1px solid var(--border); padding: 20px; border-radius: 12px; margin-bottom: 24px; }
+        .box h3 { font-size: 1rem; font-weight: 600; margin-bottom: 16px; color: #fff; display: flex; justify-content: space-between; align-items: center; }
         
-        .box { background: var(--card); border: 1px solid var(--border); padding: 20px; border-radius: 12px; margin-bottom: 20px; }
-        .box h3 { font-size: 1rem; font-weight: 600; margin-bottom: 16px; color: #fff; }
+        /* Interactive Calendar Grid */
+        .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; text-align: center; }
+        .weekday-label { font-size: 0.75rem; color: var(--text-muted); font-weight: 600; padding: 4px 0; }
+        .day-cell { background: rgba(255,255,255,0.01); border: 1px solid var(--border); border-radius: 8px; aspect-ratio: 1; display: flex; flex-direction: column; justify-content: space-between; padding: 6px; cursor: pointer; font-size: 0.85rem; position: relative; }
+        .day-cell:hover { background: rgba(255,255,255,0.04); }
+        .day-cell.active { border-color: var(--blue); background: rgba(59, 130, 246, 0.08); }
+        .day-cell.has-data::after { content: ''; position: absolute; bottom: 4px; right: 4px; width: 5px; height: 5px; background: var(--emerald); border-radius: 50%; }
+        .day-hours-badge { font-size: 0.7rem; color: var(--blue); font-weight: 700; align-self: flex-start; }
         
-        /* Subjects View */
-        .subj-row { margin-bottom: 16px; }
-        .subj-meta { display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 6px; }
-        .bar-bg { width: 100%; background: rgba(255,255,255,0.05); height: 8px; border-radius: 4px; overflow: hidden; }
-        .bar-fill { height: 100%; background: var(--blue); width: 0%; transition: width 0.4s ease; }
+        .calendar-layout { display: grid; grid-template-columns: 1.2fr 1fr; gap: 24px; }
         
-        /* Pomodoro Engine */
-        .timer-display { font-size: 4rem; font-weight: 800; text-align: center; margin: 20px 0; font-variant-numeric: tabular-nums; color: var(--orange); }
-        .timer-controls { display: flex; gap: 12px; }
-        
-        /* Utilities forms */
+        /* Inputs & Interfaces */
         select, input, textarea { width: 100%; padding: 10px; background: #111827; border: 1px solid var(--border); color: #fff; border-radius: 8px; font-size: 0.9rem; margin-bottom: 12px; }
-        button.action-btn { background: var(--blue); border: none; color: white; padding: 10px; border-radius: 8px; font-weight: 600; cursor: pointer; width: 100%; }
-        button.action-btn:active { opacity: 0.8; }
+        input:focus, select:focus, textarea:focus { border-color: var(--blue); outline: none; }
+        .action-btn { background: var(--blue); border: none; color: white; padding: 11px; border-radius: 8px; font-weight: 600; cursor: pointer; width: 100%; font-size: 0.9rem; }
+        .action-btn:active { opacity: 0.8; }
         
-        /* List nodes */
-        .item-list { list-style: none; space-y: 8px; }
-        .list-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 8px; font-size: 0.9rem; }
-        .list-item.completed span { text-decoration: line-through; color: var(--text-muted); }
-        .delete-btn { background: none; border: none; color: var(--red); font-size: 0.8rem; cursor: pointer; }
+        /* Task Cards */
+        .task-row { display: flex; justify-content: space-between; align-items: flex-start; padding: 12px; background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 8px; font-size: 0.9rem; gap: 8px; }
+        .task-left { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+        .task-meta-tags { display: flex; gap: 6px; align-items: center; }
+        .task-hours { font-size: 0.7rem; background: rgba(59, 130, 246, 0.15); color: var(--blue); padding: 2px 6px; border-radius: 4px; font-weight: 700; }
+        .task-subj-tag { font-size: 0.7rem; background: rgba(16, 185, 129, 0.12); color: var(--emerald); padding: 2px 6px; border-radius: 4px; font-weight: 600; }
+        .del-btn { background: none; border: none; color: var(--red); cursor: pointer; font-size: 0.8rem; padding: 2px 4px; }
+        
+        /* Block Framework Profiles */
+        .block-card { background: rgba(255,255,255,0.01); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 14px; position: relative; }
+        .block-title { font-weight: 600; color: #fff; font-size: 1rem; margin-bottom: 4px; }
+        .block-dates { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 10px; }
+        .block-task-item { font-size: 0.85rem; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.03); display: flex; justify-content: space-between; }
+        
+        /* Pomodoro Display Engine */
+        .timer-display { font-size: 4.5rem; font-weight: 800; text-align: center; margin: 16px 0; font-variant-numeric: tabular-nums; color: var(--orange); letter-spacing: -0.02em; }
+        .timer-controls { display: flex; gap: 12px; margin-top: 16px; }
+        .timer-settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; background: rgba(255,255,255,0.01); padding: 14px; border-radius: 8px; border: 1px solid var(--border); }
+        .timer-settings-grid label { font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px; }
+        .timer-status-indicator { text-align: center; font-size: 0.9rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--emerald); margin-top: 4px; }
     </style>
 </head>
 <body>
 
     <aside>
         <div class="brand">
-            <h1>CA Inter Tracker</h1>
-            <p>Syllabus Registry</p>
+            <h1>CA Inter Space</h1>
+            <p>Schedule & Block Planner</p>
         </div>
         <nav>
-            <button class="nav-btn active" onclick="switchView('dashboard')">Dashboard</button>
-            <button class="nav-btn" onclick="switchView('pomodoro')">Pomodoro Timer</button>
-            <button class="nav-btn" onclick="switchView('tasks')">Task Matrix</button>
-            <button class="nav-btn" onclick="switchView('notes')">Scratch Ledger</button>
+            <button class="nav-btn active" id="btn-calendar" onclick="switchView('calendar-view')">Daily Calendar</button>
+            <button class="nav-btn" id="btn-planner" onclick="switchView('planner-view')">Block Timeline Planner</button>
+            <button class="nav-btn" id="btn-pomodoro" onclick="switchView('pomodoro-view')">Adjustable Pomodoro</button>
         </nav>
     </aside>
 
     <main>
-        <div id="dashboard" class="view-section active">
-            <div class="grid-stats">
-                <div class="card"><p>Total Hours</p><h2 id="dash-total" style="color:var(--blue)">0.0h</h2></div>
-                <div class="card"><p>Target Goal</p><h2>920h</h2></div>
-                <div class="card"><p>Pomodoros</p><h2 id="dash-pomo" style="color:var(--orange)">0</h2></div>
-            </div>
+        <div id="calendar-view" class="view-section active">
+            <div class="calendar-layout">
+                <div>
+                    <div class="box">
+                        <div class="calendar-header">
+                            <h2 id="month-year-label" style="font-size:1.1rem; font-weight:700;"></h2>
+                            <div style="display:flex; gap:6px;">
+                                <button class="action-btn" style="padding:6px 12px;" onclick="moveMonth(-1)">&larr;</button>
+                                <button class="action-btn" style="padding:6px 12px;" onclick="moveMonth(1)">&rarr;</button>
+                            </div>
+                        </div>
+                        <div class="calendar-grid" id="weekday-labels-row"></div>
+                        <div class="calendar-grid" id="calendar-cells-grid" style="margin-top:8px;"></div>
+                    </div>
+                </div>
 
-            <div class="box">
-                <h3>Syllabus Progress Tracker</h3>
-                <div id="subjects-wrapper"></div>
-            </div>
+                <div>
+                    <div class="box">
+                        <h3 id="selected-date-title">Select a Date</h3>
+                        
+                        <div style="margin-top:12px;">
+                            <label style="font-size:0.75rem; color:var(--text-muted);">Select Target Subject</label>
+                            <select id="day-subject-select">
+                                <option value="aa">Advanced Accounting</option>
+                                <option value="law">Corporate and Other Laws</option>
+                                <option value="tax">Taxation (IT + GST)</option>
+                                <option value="cma">Cost & Management Accounting</option>
+                                <option value="audit">Auditing and Ethics</option>
+                                <option value="fmsm">FM & Strategic Management</option>
+                            </select>
 
-            <div class="box">
-                <h3>Log Study Session Metric</h3>
-                <select id="log-sub">
-                    <option value="aa">Advanced Accounting (200h)</option>
-                    <option value="law">Corporate and Other Laws (150h)</option>
-                    <option value="tax">Taxation (IT + GST) (200h)</option>
-                    <option value="cma">Cost & Management Accounting (150h)</option>
-                    <option value="audit">Auditing and Ethics (100h)</option>
-                    <option value="fmsm">FM & Strategic Management (120h)</option>
-                </select>
-                <input type="number" id="log-hrs" step="0.5" placeholder="Hours logged (e.g. 3.5)">
-                <button class="action-btn" onclick="addStudyHours()">Commit Session Metrics</button>
-            </div>
-        </div>
-
-        <div id="pomodoro" class="view-section">
-            <div class="box">
-                <h3>Focus Countdown Engine</h3>
-                <div class="timer-display" id="timer-clock">25:00</div>
-                <div class="timer-controls">
-                    <button class="action-btn" style="background:var(--emerald)" onclick="startTimer()">Start</button>
-                    <button class="action-btn" style="background:var(--orange)" onclick="pauseTimer()">Pause</button>
-                    <button class="action-btn" style="background:rgba(255,255,255,0.1)" onclick="resetTimer()">Reset</button>
+                            <label style="font-size:0.75rem; color:var(--text-muted);">Task Ledger Details</label>
+                            <input type="text" id="day-task-input" placeholder="e.g. Solved Audit Sampling Past Year Questions">
+                            
+                            <label style="font-size:0.75rem; color:var(--text-muted);">Study Time Hours</label>
+                            <input type="number" id="day-hours-input" step="0.5" placeholder="Hours logged (e.g. 3.0)">
+                            
+                            <button class="action-btn" onclick="saveDayTask()">Commit Daily Log</button>
+                        </div>
+                        
+                        <div style="margin-top:24px;">
+                            <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:10px;">Logged Entries For Selected Date</p>
+                            <div id="day-tasks-container"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div id="tasks" class="view-section">
+        <div id="planner-view" class="view-section">
             <div class="box">
-                <h3>Milestone Tasks Checklist</h3>
-                <input type="text" id="task-input" placeholder="Enter chapter task milestone...">
-                <button class="action-btn" onclick="addTaskItem()">Queue Task Node</button>
-                <ul id="task-list" class="item-list" style="margin-top: 16px;"></ul>
+                <h3>Create Revision/Study Block Plan</h3>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                    <div>
+                        <label style="font-size:0.75rem; color:var(--text-muted)">Block Plan Title</label>
+                        <input type="text" id="block-title-input" placeholder="e.g., First Revision Group 1">
+                    </div>
+                    <div>
+                        <label style="font-size:0.75rem; color:var(--text-muted)">Subject Target Group</label>
+                        <select id="block-subject-select">
+                            <option value="aa">Advanced Accounting</option>
+                            <option value="law">Corporate and Other Laws</option>
+                            <option value="tax">Taxation (IT + GST)</option>
+                            <option value="cma">Cost & Management Accounting</option>
+                            <option value="audit">Auditing and Ethics</option>
+                            <option value="fmsm">FM & Strategic Management</option>
+                        </select>
+                    </div>
+                </div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:4px;">
+                    <div>
+                        <label style="font-size:0.75rem; color:var(--text-muted)">Start Date</label>
+                        <input type="date" id="block-start-date">
+                    </div>
+                    <div>
+                        <label style="font-size:0.75rem; color:var(--text-muted)">End Date</label>
+                        <input type="date" id="block-end-date">
+                    </div>
+                </div>
+                <label style="font-size:0.75rem; color:var(--text-muted)">Target Core Tasks (One task per line)</label>
+                <textarea id="block-tasks-textarea" rows="3" placeholder="Line 1: Complete Capital Budgeting&#10;Line 2: Practice RTP questions"></textarea>
+                <button class="action-btn" style="background:var(--emerald)" onclick="createBlockPlan()">Commit Block Matrix</button>
+            </div>
+            <div class="box">
+                <h3>Active Study Blocks Timeline</h3>
+                <div id="blocks-container"></div>
             </div>
         </div>
 
-        <div id="notes" class="view-section">
-            <div class="box">
-                <h3>Revision Scratch Ledger</h3>
-                <textarea id="note-input" rows="4" placeholder="Jot down formulas, sections, or quick reminders..."></textarea>
-                <button class="action-btn" onclick="addNoteItem()">Save Ledger Entry</button>
-                <div id="notes-list" style="margin-top: 16px;"></div>
+        <div id="pomodoro-view" class="view-section">
+            <div class="box" style="max-width: 550px; margin: 0 auto;">
+                <h3>Focus Interval Engine</h3>
+                <div class="timer-settings-grid">
+                    <div>
+                        <label for="custom-focus-time">Focus Block (Minutes)</label>
+                        <input type="number" id="custom-focus-time" value="25" min="1" max="180" onchange="adjustTimerSettings()">
+                    </div>
+                    <div>
+                        <label for="custom-break-time">Break Block (Minutes)</label>
+                        <input type="number" id="custom-break-time" value="5" min="1" max="60" onchange="adjustTimerSettings()">
+                    </div>
+                </div>
+                <div class="timer-status-indicator" id="timer-status-text">Focus Period</div>
+                <div class="timer-display" id="timer-clock">25:00</div>
+                <div class="timer-controls">
+                    <button class="action-btn" style="background:var(--emerald)" onclick="startTimer()">Start Session</button>
+                    <button class="action-btn" style="background:var(--orange)" onclick="pauseTimer()">Pause</button>
+                    <button class="action-btn" style="background:rgba(255,255,255,0.1); color: #fff;" onclick="resetTimer()">Reset</button>
+                </div>
             </div>
         </div>
     </main>
 
     <script>
-        // Core State Store
-        let state = {
-            hours: { aa: 0, law: 0, tax: 0, cma: 0, audit: 0, fmsm: 0 },
-            targets: { aa: 200, law: 150, tax: 200, cma: 150, audit: 100, fmsm: 120 },
-            names: { aa: "Advanced Accounting", law: "Corporate and Other Laws", tax: "Taxation (IT + GST)", cma: "Cost & Management Accounting", audit: "Auditing and Ethics", fmsm: "FM & Strategic Management" },
-            pomodoros: 0,
-            tasks: [],
-            notes: []
+        // Data Subject Mapping Config
+        const subjectsMapping = {
+            aa: "Advanced Accounting", 
+            law: "Corporate and Other Laws", 
+            tax: "Taxation (IT + GST)",
+            cma: "Cost & Management Accounting", 
+            audit: "Auditing and Ethics", 
+            fmsm: "FM & Strategic Management"
         };
 
-        // Navigation Engine
+        let db = {
+            calendarData: {}, // Format: {"YYYY-MM-DD": [{id, text, hours, subjectKey}]}
+            blocks: [],
+            timerConfig: { focusMins: 25, breakMins: 5 }
+        };
+
+        let currentNavDate = new Date();
+        let selectedDateStr = new Date().toISOString().split('T')[0];
+        
+        let timerInterval = null;
+        let timeRemaining = 25 * 60;
+        let isBreakMode = false;
+
         function switchView(viewId) {
             document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
             document.getElementById(viewId).classList.add('active');
-            event.currentTarget.classList.add('active');
-        }
-
-        // Global Data Hydration
-        function loadStorage() {
-            const stored = localStorage.getItem('ca_loaded_state');
-            if (stored) { state = JSON.parse(stored); }
-            renderAll();
-        }
-
-        function saveStorage() {
-            localStorage.setItem('ca_loaded_state', JSON.stringify(state));
-        }
-
-        function renderAll() {
-            // Render Progress Elements
-            const wrapper = document.getElementById('subjects-wrapper');
-            wrapper.innerHTML = '';
-            let total = 0;
             
-            Object.keys(state.hours).forEach(k => {
-                const done = state.hours[k];
-                const target = state.targets[k];
-                total += done;
-                const pct = Math.min(100, Math.round((done / target) * 100));
+            if (viewId === 'calendar-view') document.getElementById('btn-calendar').classList.add('active');
+            if (viewId === 'planner-view') document.getElementById('btn-planner').classList.add('active');
+            if (viewId === 'pomodoro-view') document.getElementById('btn-pomodoro').classList.add('active');
+        }
+
+        function initData() {
+            const saved = localStorage.getItem('ca_space_db_v3');
+            if (saved) { 
+                const parsed = JSON.parse(saved);
+                if (parsed) {
+                    db = parsed;
+                    if (!db.blocks || Array.isArray(db.blocks)) { db.blocks = []; }
+                    if (!db.timerConfig) { db.timerConfig = { focusMins: 25, breakMins: 5 }; }
+                }
+            }
+            
+            document.getElementById('custom-focus-time').value = db.timerConfig.focusMins;
+            document.getElementById('custom-break-time').value = db.timerConfig.breakMins;
+            timeRemaining = db.timerConfig.focusMins * 60;
+
+            const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            document.getElementById('weekday-labels-row').innerHTML = days.map(d => `<div class="weekday-label">${d}</div>`).join('');
+            
+            updateTimerDisplay();
+            renderCalendar();
+            renderSelectedDayView();
+            renderBlocks();
+        }
+
+        function saveAndRefresh() {
+            localStorage.setItem('ca_space_db_v3', JSON.stringify(db));
+            renderCalendar();
+            renderSelectedDayView();
+            renderBlocks();
+        }
+
+        // Calendar Grid Engine
+        function moveMonth(dir) {
+            currentNavDate.setMonth(currentNavDate.getMonth() + dir);
+            renderCalendar();
+        }
+
+        function renderCalendar() {
+            const year = currentNavDate.getFullYear();
+            const month = currentNavDate.getMonth();
+            const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+            document.getElementById('month-year-label').innerText = `${monthNames[month]} ${year}`;
+            
+            const firstDayIdx = new Date(year, month, 1).getDay();
+            const totalDays = new Date(year, month + 1, 0).getDate();
+            const gridContainer = document.getElementById('calendar-cells-grid');
+            gridContainer.innerHTML = '';
+            
+            for(let i = 0; i < firstDayIdx; i++) { gridContainer.innerHTML += `<div></div>`; }
+            
+            for(let day = 1; day <= totalDays; day++) {
+                const mapMonth = (month + 1).toString().padStart(2, '0');
+                const mapDay = day.toString().padStart(2, '0');
+                const loopDateStr = `${year}-${mapMonth}-${mapDay}`;
                 
-                wrapper.innerHTML += `
-                    <div class="subj-row">
-                        <div class="subj-meta">
-                            <span>${state.names[k]}</span>
-                            <span style="color:var(--text-muted)">${done.toFixed(1)} / ${target}h (${pct}%)</span>
+                const hasDataClass = db.calendarData[loopDateStr] && db.calendarData[loopDateStr].length > 0 ? 'has-data' : '';
+                const activeClass = loopDateStr === selectedDateStr ? 'active' : '';
+                
+                let dailyHoursSum = 0;
+                if(db.calendarData[loopDateStr]) {
+                    db.calendarData[loopDateStr].forEach(t => dailyHoursSum += parseFloat(t.hours || 0));
+                }
+                const displayHours = dailyHoursSum > 0 ? `<span class="day-hours-badge">${dailyHoursSum}h</span>` : '<span></span>';
+
+                gridContainer.innerHTML += `
+                    <div class="day-cell ${activeClass} ${hasDataClass}" onclick="selectDate('${loopDateStr}')">
+                        ${displayHours}
+                        <span style="align-self: flex-end; font-weight:500;">${day}</span>
+                    </div>
+                `;
+            }
+        }
+
+        function selectDate(dateStr) {
+            selectedDateStr = dateStr;
+            renderCalendar();
+            renderSelectedDayView();
+        }
+
+        function renderSelectedDayView() {
+            const parsedDate = new Date(selectedDateStr + "T00:00:00");
+            const formatStr = parsedDate.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+            document.getElementById('selected-date-title').innerText = formatStr;
+            
+            const container = document.getElementById('day-tasks-container');
+            container.innerHTML = '';
+            
+            const entries = db.calendarData[selectedDateStr] || [];
+            if(entries.length === 0) {
+                container.innerHTML = `<p style="font-size:0.85rem; color:var(--text-muted)">No entries recorded for this day.</p>`;
+                return;
+            }
+            
+            entries.forEach((entry, idx) => {
+                const subjName = subjectsMapping[entry.subjectKey] || "General Study";
+                container.innerHTML += `
+                    <div class="task-row">
+                        <div class="task-left">
+                            <div class="task-meta-tags">
+                                <span class="task-subj-tag">${subjName}</span>
+                                <span class="task-hours">${entry.hours}h</span>
+                            </div>
+                            <span style="color:#fff; font-weight: 500; margin-top:2px;">${entry.text}</span>
                         </div>
-                        <div class="bar-bg">
-                            <div class="bar-fill" style="width: ${pct}%"></div>
+                        <button class="del-btn" onclick="deleteDayTask(${idx})">Delete</button>
+                    </div>
+                `;
+            });
+        }
+
+        function saveDayTask() {
+            const textVal = document.getElementById('day-task-input').value.trim();
+            const hoursVal = parseFloat(document.getElementById('day-hours-input').value);
+            const subjectKey = document.getElementById('day-subject-select').value;
+            
+            if(!textVal || isNaN(hoursVal) || hoursVal <= 0) return;
+            
+            if(!db.calendarData[selectedDateStr]) { db.calendarData[selectedDateStr] = []; }
+            db.calendarData[selectedDateStr].push({ 
+                text: textVal, 
+                hours: hoursVal,
+                subjectKey: subjectKey 
+            });
+            
+            document.getElementById('day-task-input').value = '';
+            document.getElementById('day-hours-input').value = '';
+            saveAndRefresh();
+        }
+
+        function deleteDayTask(idx) {
+            db.calendarData[selectedDateStr].splice(idx, 1);
+            if(db.calendarData[selectedDateStr].length === 0) { delete db.calendarData[selectedDateStr]; }
+            saveAndRefresh();
+        }
+
+        // Timeline Block Framework Execution
+        function createBlockPlan() {
+            const title = document.getElementById('block-title-input').value.trim();
+            const subj = document.getElementById('block-subject-select').value;
+            const start = document.getElementById('block-start-date').value;
+            const end = document.getElementById('block-end-date').value;
+            const rawTasks = document.getElementById('block-tasks-textarea').value.split('\n');
+            
+            if(!title || !start || !end) { alert("Please complete the Plan Title, Start, and End dates."); return; }
+            
+            const tasksArray = [];
+            rawTasks.forEach(t => { if(t.trim()) tasksArray.push({ text: t.trim(), done: false }); });
+            
+            db.blocks.push({
+                id: Math.random().toString(36).substring(2, 7),
+                title: title, subject: subj, start: start, end: end, tasks: tasksArray
+            });
+            
+            document.getElementById('block-title-input').value = '';
+            document.getElementById('block-tasks-textarea').value = '';
+            saveAndRefresh();
+        }
+
+        function toggleBlockTask(blockIdx, taskIdx) {
+            db.blocks[blockIdx].tasks[taskIdx].done = !db.blocks[blockIdx].tasks[taskIdx].done;
+            saveAndRefresh();
+        }
+
+        function deleteBlockPlan(blockIdx) {
+            db.blocks.splice(blockIdx, 1);
+            saveAndRefresh();
+        }
+
+        function renderBlocks() {
+            const container = document.getElementById('blocks-container');
+            container.innerHTML = '';
+            if(db.blocks.length === 0) {
+                container.innerHTML = `<p style="font-size:0.85rem; color:var(--text-muted)">No phase planning blocks structured yet.</p>`;
+                return;
+            }
+            db.blocks.forEach((block, bIdx) => {
+                let tasksHTML = '';
+                block.tasks.forEach((task, tIdx) => {
+                    const checked = task.done ? 'checked' : '';
+                    const strikeStyle = task.done ? 'text-decoration:line-through; color:var(--text-muted);' : '';
+                    tasksHTML += `
+                        <div class="block-task-item">
+                            <label style="display:flex; gap:8px; align-items:center; cursor:pointer; ${strikeStyle}">
+                                <input type="checkbox" ${checked} onchange="toggleBlockTask(${bIdx}, ${tIdx})" style="width:auto; margin-bottom:0;">
+                                ${task.text}
+                            </label>
+                        </div>
+                    `;
+                });
+                container.innerHTML += `
+                    <div class="block-card">
+                        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                            <div>
+                                <div class="block-title">${block.title}</div>
+                                <div class="block-dates">${subjectsMapping[block.subject]} &bull; From ${block.start} to ${block.end}</div>
+                            </div>
+                            <button class="del-btn" onclick="deleteBlockPlan(${bIdx})">Remove Block</button>
+                        </div>
+                        <div style="margin-top:10px; background:rgba(0,0,0,0.15); padding:10px; border-radius:8px;">
+                            ${tasksHTML || '<p style="font-size:0.8rem; color:var(--text-muted)">No target tasks queued in this timeline node.</p>'}
                         </div>
                     </div>
                 `;
             });
-
-            document.getElementById('dash-total').innerText = total.toFixed(1) + 'h';
-            document.getElementById('dash-pomo').innerText = state.pomodoros;
-
-            // Render Checklist Nodes
-            const tList = document.getElementById('task-list');
-            tList.innerHTML = '';
-            state.tasks.forEach((t, i) => {
-                tList.innerHTML += `
-                    <li class="list-item ${t.done ? 'completed' : ''}">
-                        <span onclick="toggleTask(${i})" style="cursor:pointer; flex:1;">${t.text}</span>
-                        <button class="delete-btn" onclick="deleteTask(${i})">Remove</button>
-                    </li>
-                `;
-            });
-
-            // Render Ledger Entry Nodes
-            const nList = document.getElementById('notes-list');
-            nList.innerHTML = '';
-            state.notes.forEach((n, i) => {
-                nList.innerHTML += `
-                    <div class="list-item" style="flex-direction:column; align-items:flex-start; gap:8px;">
-                        <p style="color:#fff; white-space:pre-wrap; width:100%;">${n}</p>
-                        <button class="delete-btn" onclick="deleteNote(${i})" style="align-self:flex-end;">Delete Node</button>
-                    </div>
-                `;
-            });
         }
 
-        // Core Functions
-        function addStudyHours() {
-            const sub = document.getElementById('log-sub').value;
-            const h = parseFloat(document.getElementById('log-hrs').value);
-            if (!isNaN(h) && h > 0) {
-                state.hours[sub] += h;
-                document.getElementById('log-hrs').value = '';
-                saveStorage(); renderAll();
+        // Adjustable Pomodoro Engine
+        function adjustTimerSettings() {
+            let focusInput = parseInt(document.getElementById('custom-focus-time').value);
+            let breakInput = parseInt(document.getElementById('custom-break-time').value);
+            
+            if(isNaN(focusInput) || focusInput < 1) focusInput = 25;
+            if(isNaN(breakInput) || breakInput < 1) breakInput = 5;
+            
+            db.timerConfig.focusMins = focusInput;
+            db.timerConfig.breakMins = breakInput;
+            localStorage.setItem('ca_space_db_v3', JSON.stringify(db));
+            
+            if(!timerInterval) {
+                isBreakMode = false;
+                timeRemaining = db.timerConfig.focusMins * 60;
+                document.getElementById('timer-status-text').innerText = "Focus Period";
+                document.getElementById('timer-status-text').style.color = "var(--orange)";
+                updateTimerDisplay();
             }
         }
-
-        function addTaskItem() {
-            const val = document.getElementById('task-input').value.trim();
-            if (val) {
-                state.tasks.push({ text: val, done: false });
-                document.getElementById('task-input').value = '';
-                saveStorage(); renderAll();
-            }
-        }
-        function toggleTask(i) { state.tasks[i].done = !state.tasks[i].done; saveStorage(); renderAll(); }
-        function deleteTask(i) { state.tasks.splice(i, 1); saveStorage(); renderAll(); }
-
-        function addNoteItem() {
-            const val = document.getElementById('note-input').value.trim();
-            if (val) {
-                state.notes.push(val);
-                document.getElementById('note-input').value = '';
-                saveStorage(); renderAll();
-            }
-        }
-        function deleteNote(i) { state.notes.splice(i, 1); saveStorage(); renderAll(); }
-
-        // Pomodoro Engine Mechanism
-        let timerInterval = null;
-        let timeRemaining = 25 * 60;
 
         function updateTimerDisplay() {
             const m = Math.floor(timeRemaining / 60).toString().padStart(2, '0');
@@ -271,20 +479,37 @@
                 } else {
                     clearInterval(timerInterval);
                     timerInterval = null;
-                    timeRemaining = 25 * 60;
-                    state.pomodoros += 1;
+                    
+                    if(!isBreakMode) {
+                        isBreakMode = true;
+                        timeRemaining = db.timerConfig.breakMins * 60;
+                        document.getElementById('timer-status-text').innerText = "Break Interval Active";
+                        document.getElementById('timer-status-text').style.color = "var(--emerald)";
+                        alert("Focus Sprint Finished! Enjoy your configured rest block.");
+                    } else {
+                        isBreakMode = false;
+                        timeRemaining = db.timerConfig.focusMins * 60;
+                        document.getElementById('timer-status-text').innerText = "Focus Period";
+                        document.getElementById('timer-status-text').style.color = "var(--orange)";
+                        alert("Break completed. Time to lock back into study rotation!");
+                    }
                     updateTimerDisplay();
-                    saveStorage(); renderAll();
-                    alert("Focus sprint complete! Grab a break node.");
                 }
             }, 1000);
         }
 
         function pauseTimer() { clearInterval(timerInterval); timerInterval = null; }
-        function resetTimer() { pauseTimer(); timeRemaining = 25 * 60; updateTimerDisplay(); }
+        
+        function resetTimer() {
+            pauseTimer();
+            isBreakMode = false;
+            timeRemaining = db.timerConfig.focusMins * 60;
+            document.getElementById('timer-status-text').innerText = "Focus Period";
+            document.getElementById('timer-status-text').style.color = "var(--orange)";
+            updateTimerDisplay();
+        }
 
-        // Initialize Workspace
-        loadStorage();
+        initData();
     </script>
 </body>
 </html>
