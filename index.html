@@ -3,280 +3,120 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CA Inter Tracker - Revision 3</title>
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <title>CA Inter Tracker</title>
     <style>
-        body { background-color: #0b0f19; color: #f3f4f6; font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif; }
-        .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.05); }
-        .glass-dark { background: rgba(10, 15, 30, 0.7); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.03); }
-        .glass-card { background: rgba(255, 255, 255, 0.02); backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, 0.05); transition: all 0.2s ease; }
-        .glass-card:hover { background: rgba(255, 255, 255, 0.04); border-color: rgba(255, 255, 255, 0.08); }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        :root {
+            --bg: #0b0f19;
+            --card: rgba(255, 255, 255, 0.03);
+            --border: rgba(255, 255, 255, 0.08);
+            --text: #f3f4f6;
+            --text-muted: #9ca3af;
+            --blue: #3b82f6;
+            --emerald: #10b981;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
+        body { background-color: var(--bg); color: var(--text); padding: 16px; }
+        header { margin-bottom: 24px; border-bottom: 1px solid var(--border); padding-bottom: 12px; }
+        h1 { font-size: 1.25rem; font-weight: 700; color: #fff; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 24px; }
+        .card { background: var(--card); border: 1px solid var(--border); padding: 14px; rounded-radius: 12px; border-radius: 12px; }
+        .card p { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; }
+        .card h2 { font-size: 1.5rem; font-weight: 800; margin-top: 4px; color: var(--blue); }
+        .subj-card { background: var(--card); border: 1px solid var(--border); padding: 16px; border-radius: 12px; margin-bottom: 12px; }
+        .subj-header { display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 8px; font-weight: 600; }
+        .progress-bar-bg { width: 100%; bg: rgba(255,255,255,0.05); background: rgba(255,255,255,0.05); h: 8px; height: 8px; border-radius: 4px; overflow: hidden; }
+        .progress-bar { height: 100%; background: var(--blue); border-radius: 4px; width: 0%; transition: width 0.3s; }
+        .log-box { background: var(--card); border: 1px solid var(--border); padding: 16px; border-radius: 12px; margin-top: 24px; }
+        select, input, button { width: 100%; padding: 10px; margin-top: 8px; background: #111827; border: 1px solid var(--border); color: #fff; border-radius: 8px; font-size: 0.9rem; }
+        button { background: var(--blue); border: none; font-weight: 600; cursor: pointer; margin-top: 12px; }
+        button:active { opacity: 0.9; }
     </style>
 </head>
 <body>
-    <div id="root"></div>
-    <script type="text/babel">
-        const { useState, useEffect, useReducer, createContext, useContext, useRef } = React;
 
-        const initialSubjects = [
-            { id: "aa", name: "Advanced Accounting", shortName: "Adv. Acc.", group: 1, targetHours: 200, studiedHours: 0 },
-            { id: "law", name: "Corporate and Other Laws", shortName: "Corp. Law", group: 1, targetHours: 150, studiedHours: 0 },
-            { id: "tax", name: "Taxation (IT + GST)", shortName: "Taxation", group: 1, targetHours: 200, studiedHours: 0 },
-            { id: "cma", name: "Cost & Management Accounting", shortName: "CMA", group: 2, targetHours: 150, studiedHours: 0 },
-            { id: "audit", name: "Auditing and Ethics", shortName: "Auditing", group: 2, targetHours: 100, studiedHours: 0 },
-            { id: "fmsm", name: "FM & Strategic Management", shortName: "FM & SM", group: 2, targetHours: 120, studiedHours: 0 }
-        ];
+    <header>
+        <h1>CA Inter Study Tracker</h1>
+    </header>
 
-        const initialExamDates = [
-            { id: "1", subjectId: "aa", date: "2026-09-01", name: "Paper 1: Advanced Accounting" },
-            { id: "2", subjectId: "law", date: "2026-09-03", name: "Paper 2: Corporate Laws" },
-            { id: "3", subjectId: "tax", date: "2026-09-06", name: "Paper 3: Taxation" },
-            { id: "4", subjectId: "cma", date: "2026-09-08", name: "Paper 4: Cost Accounting" },
-            { id: "5", subjectId: "audit", date: "2026-09-10", name: "Paper 5: Auditing & Ethics" },
-            { id: "6", subjectId: "fmsm", date: "2026-09-12", name: "Paper 6: FM & SM" }
-        ];
+    <div class="grid">
+        <div class="card"><p>Total Hours</p><h2 id="total-hrs">0.0h</h2></div>
+        <div class="card"><p>Target</p><h2>920h</h2></div>
+        <div class="card"><p>Papers</p><h2>6 Total</h2></div>
+    </div>
 
-        const subjectThemes = {
-            aa: { text: "text-blue-400", bg: "bg-blue-500/20", border: "border-blue-500/30", bar: "bg-blue-500" },
-            law: { text: "text-purple-400", bg: "bg-purple-500/20", border: "border-purple-500/30", bar: "bg-purple-500" },
-            tax: { text: "text-orange-400", bg: "bg-orange-500/20", border: "border-orange-500/30", bar: "bg-orange-500" },
-            cma: { text: "text-emerald-400", bg: "bg-emerald-500/20", border: "border-emerald-500/30", bar: "bg-emerald-500" },
-            audit: { text: "text-yellow-400", bg: "bg-yellow-500/20", border: "border-yellow-500/30", bar: "bg-yellow-500" },
-            fmsm: { text: "text-rose-400", bg: "bg-rose-500/20", border: "border-rose-500/30", bar: "bg-rose-500" }
+    <div id="subjects-container"></div>
+
+    <div class="log-box">
+        <h3 style="font-size:0.9rem; font-weight:600;">Log Study Session</h3>
+        <select id="sub-select">
+            <option value="aa">Advanced Accounting (200h)</option>
+            <option value="law">Corporate and Other Laws (150h)</option>
+            <option value="tax">Taxation (IT + GST) (200h)</option>
+            <option value="cma">Cost & Management Accounting (150h)</option>
+            <option value="audit">Auditing and Ethics (100h)</option>
+            <option value="fmsm">FM & Strategic Management (120h)</option>
+        </select>
+        <input type="number" id="hrs-input" step="0.5" placeholder="Hours studied (e.g. 2.5)">
+        <button onclick="logHours()">Log Hours</button>
+    </div>
+
+    <script>
+        const subjects = {
+            aa: { name: "Advanced Accounting", target: 200, done: 0 },
+            law: { name: "Corporate and Other Laws", target: 150, done: 0 },
+            tax: { name: "Taxation (IT + GST)", target: 200, done: 0 },
+            cma: { name: "Cost & Management Accounting", target: 150, done: 0 },
+            audit: { name: "Auditing and Ethics", target: 100, done: 0 },
+            fmsm: { name: "FM & Strategic Management", target: 120, done: 0 }
         };
 
-        function appReducer(state, action) {
-            switch (action.type) {
-                case "ADD_SESSION": {
-                    const session = action.payload;
-                    return {
-                        ...state,
-                        studySessions: [...state.studySessions, session],
-                        subjects: state.subjects.map(s => s.id === session.subjectId ? { ...s, studiedHours: s.studiedHours + session.hours } : s)
-                    };
-                }
-                case "DELETE_SESSION": {
-                    const sessionToDelete = state.studySessions.find(s => s.id === action.payload);
-                    if (!sessionToDelete) return state;
-                    return {
-                        ...state,
-                        studySessions: state.studySessions.filter(s => s.id !== action.payload),
-                        subjects: state.subjects.map(s => s.id === sessionToDelete.subjectId ? { ...s, studiedHours: Math.max(0, s.studiedHours - sessionToDelete.hours) } : s)
-                    };
-                }
-                case "ADD_TASK": return { ...state, tasks: [...state.tasks, action.payload] };
-                case "TOGGLE_TASK": return { ...state, tasks: state.tasks.map(t => t.id === action.payload ? { ...t, completed: !t.completed } : t) };
-                case "DELETE_TASK": return { ...state, tasks: state.tasks.filter(t => t.id !== action.payload) };
-                case "ADD_NOTE": return { ...state, notes: [...state.notes, action.payload] };
-                case "DELETE_NOTE": return { ...state, notes: state.notes.filter(n => n.id !== action.payload) };
-                case "ADD_PLANNER_ENTRY": return { ...state, plannerEntries: [...state.plannerEntries, action.payload] };
-                case "TOGGLE_PLANNER_ENTRY": return { ...state, plannerEntries: state.plannerEntries.map(e => e.id === action.payload ? { ...e, completed: !e.completed } : e) };
-                case "DELETE_PLANNER_ENTRY": return { ...state, plannerEntries: state.plannerEntries.filter(e => e.id !== action.payload) };
-                case "UPDATE_EXAM_DATE": return { ...state, examDates: state.examDates.map(e => e.id === action.payload.id ? action.payload : e) };
-                default: return state;
+        function init() {
+            const saved = localStorage.getItem('ca_inter_data');
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                Object.keys(parsed).forEach(k => { if(subjects[k]) subjects[k].done = parsed[k].done || 0; });
+            }
+            render();
+        }
+
+        function render() {
+            const container = document.getElementById('subjects-container');
+            container.innerHTML = '';
+            let total = 0;
+
+            Object.keys(subjects).forEach(k => {
+                const s = subjects[k];
+                total += s.done;
+                const pct = Math.min(100, Math.round((s.done / s.target) * 100));
+                
+                container.innerHTML += `
+                    <div class="subj-card">
+                        <div class="subj-header">
+                            <span>${s.name}</span>
+                            <span style="color:#9ca3af">${s.done.toFixed(1)} / ${s.target}h (${pct}%)</span>
+                        </div>
+                        <div class="progress-bar-bg">
+                            <div class="progress-bar" style="width: ${pct}%"></div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            document.getElementById('total-hrs').innerText = total.toFixed(1) + 'h';
+            localStorage.setItem('ca_inter_data', JSON.stringify(subjects));
+        }
+
+        function logHours() {
+            const sub = document.getElementById('sub-select').value;
+            const val = parseFloat(document.getElementById('hrs-input').value);
+            if (!isNaN(val) && val > 0) {
+                subjects[sub].done += val;
+                document.getElementById('hrs-input').value = '';
+                render();
             }
         }
 
-        function getInitialState() {
-            try {
-                const stored = localStorage.getItem("ca-tracker-v1");
-                if (stored) {
-                    const parsed = JSON.parse(stored);
-                    return {
-                        ...parsed,
-                        subjects: initialSubjects.map(sub => {
-                            const found = parsed.subjects?.find(p => p.id === sub.id);
-                            return found ? { ...sub, studiedHours: found.studiedHours } : sub;
-                        }),
-                        examDates: parsed.examDates?.length ? parsed.examDates : initialExamDates
-                    };
-                }
-            } catch (e) { console.error(e); }
-            return { subjects: initialSubjects, studySessions: [], tasks: [], notes: [], plannerEntries: [], examDates: initialExamDates };
-        }
-
-        const AppContext = createContext(null);
-
-        function AppProvider({ children }) {
-            const [state, dispatch] = useReducer(appReducer, null, getInitialState);
-            useEffect(() => { localStorage.setItem("ca-tracker-v1", JSON.stringify(state)); }, [state]);
-            return <AppContext.Provider value={{ state, dispatch }}>{children}</AppContext.Provider>;
-        }
-
-        const useApp = () => useContext(AppContext);
-        const calculateStreak = (s) => s.length ? new Set(s.map(x => x.date)).size : 0;
-        const getTodayStr = () => new Date().toISOString().split("T")[0];
-        const daysRemaining = (d) => Math.ceil((new Date(d + "T00:00:00").getTime() - new Date().setHours(0,0,0,0)) / (1000 * 60 * 60 * 24));
-        const generateId = () => Math.random().toString(36).slice(2);
-
-        function Icon({ name, className = "w-4 h-4" }) {
-            useEffect(() => { if (window.lucide) { window.lucide.createIcons(); } }, [name, className]);
-            return <i data-lucide={name} className={className}></i>;
-        }
-
-        function Sidebar({ activeView, onViewChange }) {
-            const { state } = useApp();
-            const exam = state.examDates.map(e => ({ ...e, days: daysRemaining(e.date) })).filter(e => e.days >= 0).sort((a, b) => a.days - b.days)[0];
-            const menu = [
-                { id: "dashboard", label: "Dashboard", icon: "layout-dashboard" },
-                { id: "planner", label: "Study Planner", icon: "book-open" },
-                { id: "subjects", label: "Subjects", icon: "layers" },
-                { id: "pomodoro", label: "Pomodoro", icon: "timer" },
-                { id: "calendar", label: "Calendar", icon: "calendar" },
-                { id: "tasks", label: "Tasks", icon: "square-check-big" },
-                { id: "notes", label: "Notes", icon: "file-text" }
-            ];
-            return (
-                <aside className="w-60 h-screen sticky top-0 glass-dark border-r border-white/5 flex flex-col justify-between p-4">
-                    <div className="space-y-6">
-                        <div className="flex items-center gap-3 py-2 border-b border-white/5">
-                            <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center"><Icon name="graduation-cap" className="text-white" /></div>
-                            <div><p className="font-bold text-sm text-white">CA Inter Tracker</p><p className="text-[10px] text-gray-500">Revision 3</p></div>
-                        </div>
-                        <ul className="space-y-1">
-                            {menu.map(m => (
-                                <li key={m.id}>
-                                    <button onClick={() => onViewChange(m.id)} className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all ${activeView === m.id ? "bg-blue-500/15 text-blue-400 font-medium" : "text-gray-400 hover:text-white hover:bg-white/5"}`}>
-                                        <Icon name={m.icon} /><span>{m.label}</span>
-                                    </button>
-                                </li>
-                            ))}
-                        </ul>
-                    </div>
-                    {exam && <div className="glass rounded-xl p-3"><p className="text-[10px] text-gray-500 uppercase">Next Paper</p><p className="text-xs font-bold text-white mt-0.5 truncate">{exam.name}</p><p className="text-lg font-black text-blue-400 mt-1">{exam.days} Days</p></div>}
-                </aside>
-            );
-        }
-
-        function DashboardView() {
-            const { state, dispatch } = useApp();
-            const [selectedSub, setSelectedSub] = useState("aa");
-            const [logHours, setLogHours] = useState("");
-            const [sessionNote, setSessionNote] = useState("");
-
-            const today = getTodayStr();
-            const todayHours = state.studySessions.filter(s => s.date === today).reduce((acc, curr) => acc + curr.hours, 0);
-            const totalHours = state.subjects.reduce((acc, curr) => acc + curr.studiedHours, 0);
-            const streak = calculateStreak(state.studySessions);
-            const pendingTasks = state.tasks.filter(t => !t.completed).length;
-
-            const handleLog = (e) => {
-                e.preventDefault();
-                const h = parseFloat(logHours);
-                if (isNaN(h) || h <= 0) return;
-                dispatch({ type: "ADD_SESSION", payload: { id: generateId(), subjectId: selectedSub, hours: h, note: sessionNote || "Self Study", date: today, timestamp: new Date().toLocaleTimeString("en-IN", { hour: '2-digit', minute: '2-digit' }) } });
-                setLogHours(""); setSessionNote("");
-            };
-
-            return (
-                <div className="space-y-6">
-                    <div className="grid grid-cols-4 gap-4">
-                        {[
-                            { label: "Today's Hours", val: `${todayHours.toFixed(1)}h`, icon: "clock", col: "text-blue-400" },
-                            { label: "Total Progress", val: `${totalHours.toFixed(1)}h`, icon: "trending-up", col: "text-emerald-400" },
-                            { label: "Days Logged", val: `${streak} Days`, icon: "flame", col: "text-orange-400" },
-                            { label: "Open Tasks", val: `${pendingTasks}`, icon: "square-check-big", col: "text-purple-400" }
-                        ].map((c, i) => (
-                            <div key={i} className="glass-card rounded-xl p-4 flex justify-between items-start">
-                                <div><p className="text-xs text-gray-400">{c.label}</p><p className={`text-2xl font-bold mt-1 ${c.col}` Gentile}>{c.val}</p></div>
-                                <Icon name={c.icon} className={`w-5 h-5 ${c.col}`} />
-                            </div>
-                        ))}
-                    </div>
-                    <div className="grid grid-cols-3 gap-6">
-                        <div className="col-span-2 glass-card rounded-xl p-5 space-y-4">
-                            <h2 className="font-semibold text-sm flex items-center gap-2"><Icon name="target" className="text-blue-400" /> Syllabus Analytics</h2>
-                            {state.subjects.map(s => {
-                                const pct = Math.min(100, Math.round((s.studiedHours / s.targetHours) * 100));
-                                return (
-                                    <div key={s.id} className="space-y-1">
-                                        <div className="flex justify-between text-xs"><span className="text-gray-300">{s.name}</span><span className="text-gray-400">{s.studiedHours.toFixed(1)}/{s.targetHours}h ({pct}%)</span></div>
-                                        <div className="w-full bg-white/5 h-2 rounded-full overflow-hidden"><div className={`h-full ${subjectThemes[s.id].bar}`} style={{ width: `${pct}%` }}></div></div>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                        <div className="glass-card rounded-xl p-5">
-                            <h2 className="font-semibold text-sm mb-4 flex items-center gap-2"><Icon name="clock" className="text-blue-400" /> Log Session Metrics</h2>
-                            <form onSubmit={handleLog} className="space-y-3">
-                                <select value={selectedSub} onChange={(e) => setSelectedSub(e.target.value)} className="w-full bg-slate-900 border border-white/10 rounded-lg p-2 text-sm text-white">
-                                    {state.subjects.map(s => <option key={s.id} value={s.id}>{s.shortName}</option>)}
-                                </select>
-                                <input type="number" step="0.5" required placeholder="Duration (Hours)" value={logHours} onChange={(e) => setLogHours(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-lg p-2 text-sm text-white" />
-                                <input type="text" placeholder="Topics / Reference standards covered" value={sessionNote} onChange={(e) => setSessionNote(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-lg p-2 text-sm text-white" />
-                                <button type="submit" className="w-full bg-blue-600 hover:bg-blue-500 text-white font-medium p-2 rounded-lg text-sm transition-colors">Submit Metric Logs</button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            );
-        }
-
-        function StudyPlannerView() {
-            const { state, dispatch } = useApp();
-            const [planText, setPlanText] = useState("");
-            const [planSubject, setPlanSubject] = useState("aa");
-            const handleAdd = (e) => {
-                e.preventDefault(); if (!planText.trim()) return;
-                dispatch({ type: "ADD_PLANNER_ENTRY", payload: { id: generateId(), subjectId: planSubject, task: planText, completed: false } });
-                setPlanText("");
-            };
-            return (
-                <div className="grid grid-cols-3 gap-6">
-                    <div className="glass-card rounded-xl p-5 h-fit space-y-4">
-                        <h2 className="font-semibold text-sm flex items-center gap-2"><Icon name="plus" className="text-blue-400" /> Queue Target Milestone</h2>
-                        <form onSubmit={handleAdd} className="space-y-3">
-                            <select value={planSubject} onChange={(e) => setPlanSubject(e.target.value)} className="w-full bg-slate-900 border border-white/10 rounded-lg p-2 text-sm text-white">
-                                {state.subjects.map(s => <option key={s.id} value={s.id}>{s.shortName}</option>)}
-                            </select>
-                            <input type="text" required placeholder="Milestone chapters layout..." value={planText} onChange={(e) => setPlanText(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-lg p-2 text-sm text-white" />
-                            <button type="submit" className="w-full bg-blue-600 hover:bg-blue-500 text-white p-2 rounded-lg text-sm">Commit Plan Node</button>
-                        </form>
-                    </div>
-                    <div className="col-span-2 glass-card rounded-xl p-5 space-y-4">
-                        <h2 className="font-semibold text-sm flex items-center gap-2"><Icon name="book-open" className="text-blue-400" /> Syllabus Benchmarks Registry</h2>
-                        <div className="space-y-2">
-                            {state.plannerEntries.map(e => (
-                                <div key={e.id} className="flex items-center justify-between p-3 bg-white/5 border border-white/10 rounded-lg">
-                                    <div className="flex items-center gap-3">
-                                        <button onClick={() => dispatch({ type: "TOGGLE_PLANNER_ENTRY", payload: e.id })} className={`w-5 h-5 rounded border flex items-center justify-center ${e.completed ? "bg-emerald-500 border-emerald-600 text-white" : "border-white/20"}`}>{e.completed && <Icon name="check" className="w-3.5 h-3.5" />}</button>
-                                        <span className={`text-sm ${e.completed ? "line-through text-gray-500" : "text-white"}`}>{e.task}</span>
-                                    </div>
-                                    <button onClick={() => dispatch({ type: "DELETE_PLANNER_ENTRY", payload: e.id })} className="text-gray-500 hover:text-red-400"><Icon name="trash-2" /></button>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-            );
-        }
-
-        function MainLayout() {
-            const [view, setView] = useState("dashboard");
-            return (
-                <div className="flex min-h-screen">
-                    <Sidebar activeView={view} onViewChange={setView} />
-                    <main className="flex-1 p-8 max-w-7xl mx-auto w-full">
-                        {view === "dashboard" && <DashboardView />}
-                        {view === "planner" && <StudyPlannerView />}
-                        {view === "subjects" && <div className="text-gray-400 text-sm">Curriculum module loaded active.</div>}
-                        {view === "pomodoro" && <div className="text-gray-400 text-sm">Focus timers dashboard.</div>}
-                        {view === "calendar" && <div className="text-gray-400 text-sm">Milestones Calendar block.</div>}
-                        {view === "tasks" && <div className="text-gray-400 text-sm">Task matrices active.</div>}
-                        {view === "notes" && <div className="text-gray-400 text-sm">Syllabus scratch ledger.</div>}
-                    </main>
-                </div>
-            );
-        }
-
-        function App() { return <AppProvider><MainLayout /></AppProvider>; }
-        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+        init();
     </script>
 </body>
 </html>
