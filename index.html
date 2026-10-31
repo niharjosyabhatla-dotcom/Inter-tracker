@@ -1,707 +1,339 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ICAI Inter Command Space</title>
-    <style>
-        :root {
-            --bg: #0b0f19;
-            --card: rgba(255, 255, 255, 0.03);
-            --border: rgba(255, 255, 255, 0.08);
-            --text: #f3f4f6;
-            --text-muted: #9ca3af;
-            --blue: #3b82f6;
-            --emerald: #10b981;
-            --orange: #f97316;
-            --red: #ef4444;
-            --purple: #a855f7;
-        }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
-        body { background-color: var(--bg); color: var(--text); display: flex; min-height: 100vh; }
-        
-        /* Layout Sidebar Setup */
-        aside { width: 280px; background: rgba(10, 15, 30, 0.9); border-right: 1px solid var(--border); padding: 20px; display: flex; flex-direction: column; gap: 20px; height: 100vh; overflow-y: auto; position: sticky; top: 0; }
-        main { flex: 1; padding: 28px; max-width: 1100px; width: 100%; margin: 0 auto; overflow-y: auto; }
-        
-        .brand h1 { font-size: 1.2rem; font-weight: 700; color: #fff; letter-spacing: -0.02em; }
-        .brand p { font-size: 0.75rem; color: var(--text-muted); margin-top: 2px; }
-        
-        /* Exam Countdown Widgets */
-        .countdown-box { background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 8px; padding: 10px; margin-top: 4px; }
-        .countdown-title { font-size: 0.75rem; font-weight: 600; color: #fff; display: flex; justify-content: space-between; }
-        .countdown-days { font-size: 0.85rem; color: var(--orange); font-weight: 700; }
-        
-        .nav-btn { width: 100%; text-align: left; padding: 12px; background: none; border: none; color: var(--text-muted); border-radius: 8px; font-size: 0.95rem; font-weight: 500; cursor: pointer; transition: all 0.2s; margin-bottom: 4px; }
-        .nav-btn.active, .nav-btn:hover { background: rgba(59, 130, 246, 0.12); color: var(--blue); }
-        
-        .view-section { display: none; }
-        .view-section.active { display: block; }
-        
-        .box { background: var(--card); border: 1px solid var(--border); padding: 20px; border-radius: 12px; margin-bottom: 24px; }
-        .box h3 { font-size: 1rem; font-weight: 600; margin-bottom: 16px; color: #fff; display: flex; justify-content: space-between; align-items: center; }
-        
-        /* Calendar UI Components */
-        .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
-        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; text-align: center; }
-        .weekday-label { font-size: 0.75rem; color: var(--text-muted); font-weight: 600; padding: 4px 0; }
-        .day-cell { background: rgba(255,255,255,0.01); border: 1px solid var(--border); border-radius: 8px; aspect-ratio: 1; display: flex; flex-direction: column; justify-content: space-between; padding: 6px; cursor: pointer; font-size: 0.85rem; position: relative; }
-        .day-cell:hover { background: rgba(255,255,255,0.04); }
-        .day-cell.active { border-color: var(--blue); background: rgba(59, 130, 246, 0.08); }
-        .day-cell.has-data::after { content: ''; position: absolute; bottom: 4px; right: 4px; width: 5px; height: 5px; background: var(--emerald); border-radius: 50%; }
-        .day-cell.has-deadline::before { content: '⚠️'; position: absolute; top: 4px; right: 4px; font-size: 0.65rem; }
-        .day-hours-badge { font-size: 0.7rem; color: var(--blue); font-weight: 700; align-self: flex-start; }
-        
-        .calendar-layout { display: grid; grid-template-columns: 1.2fr 1fr; gap: 24px; }
-        
-        select, input, textarea { width: 100%; padding: 10px; background: #111827; border: 1px solid var(--border); color: #fff; border-radius: 8px; font-size: 0.9rem; margin-bottom: 12px; }
-        .action-btn { background: var(--blue); border: none; color: white; padding: 11px; border-radius: 8px; font-weight: 600; cursor: pointer; width: 100%; font-size: 0.9rem; }
-        
-        /* Task Checkbox Row Layout */
-        .task-row { display: flex; justify-content: space-between; align-items: center; padding: 12px; background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 8px; font-size: 0.9rem; gap: 10px; }
-        .task-left { display: flex; align-items: center; gap: 10px; flex: 1; }
-        .task-checkbox-btn { background: none; border: 2px solid var(--border); width: 18px; height: 18px; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: transparent; font-size: 0.7rem; font-weight: bold; transition: all 0.2s; }
-        .task-checkbox-btn.completed { background: var(--emerald); border-color: var(--emerald); color: #fff; }
-        .task-content-block { display: flex; flex-direction: column; gap: 2px; }
-        .task-meta-tags { display: flex; gap: 6px; align-items: center; }
-        .task-hours { font-size: 0.7rem; background: rgba(59, 130, 246, 0.15); color: var(--blue); padding: 2px 6px; border-radius: 4px; font-weight: 700; }
-        .task-subj-tag { font-size: 0.7rem; background: rgba(16, 185, 129, 0.12); color: var(--emerald); padding: 2px 6px; border-radius: 4px; font-weight: 600; }
-        .del-btn { background: none; border: none; color: var(--red); cursor: pointer; font-size: 0.8rem; }
-        
-        /* Alerts for Deadlines inside day dashboard view */
-        .deadline-alert-node { background: rgba(239, 68, 68, 0.08); border: 1px solid var(--red); border-radius: 8px; padding: 10px; margin-bottom: 10px; font-size: 0.85rem; }
-        .deadline-badge-type { font-size: 0.65rem; font-weight: 800; text-transform: uppercase; padding: 2px 6px; border-radius: 4px; margin-right: 6px; color: #fff; }
-        .badge-mock { background: var(--purple); }
-        .badge-rev { background: var(--orange); }
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#101827"><title>CA Inter Jan 2027 | Study Command Centre</title>
+<style>
+:root{--bg:#f4f6fa;--panel:#fff;--ink:#182235;--muted:#718096;--line:#e6eaf1;--accent:#6558e8;--soft:#efedff;--green:#159b72;--amber:#d68b21;--red:#d75a68;--nav:#111a2b;--shadow:0 10px 35px #1a294010}
+[data-theme=dark]{color-scheme:dark;--bg:#0d1421;--panel:#151f30;--ink:#edf2fa;--muted:#9aa8bd;--line:#273449;--soft:#29264d;--nav:#0a101b;--shadow:0 10px 35px #0003}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}button,input,select,textarea{font:inherit}button{cursor:pointer;border:0} .app{display:flex;min-height:100vh}.sidebar{width:248px;background:var(--nav);color:#dce5f3;padding:22px 14px;position:fixed;inset:0 auto 0 0;overflow:auto;z-index:5}.brand{padding:8px 12px 22px;border-bottom:1px solid #ffffff18}.brand b{display:block;font-size:15px;letter-spacing:.4px}.brand span{font-size:11px;color:#8ea0b9}.navlabel{font-size:10px;color:#8291a8;text-transform:uppercase;letter-spacing:1.4px;padding:19px 12px 7px}.nav button{display:flex;align-items:center;gap:11px;width:100%;padding:10px 12px;border-radius:9px;background:transparent;color:#aebbd0;text-align:left;margin:2px 0}.nav button:hover,.nav button.active{background:#ffffff13;color:white}.nav .sub{padding-left:39px;font-size:12px}.main{margin-left:248px;width:calc(100% - 248px);padding:25px 30px 60px;max-width:1700px}.top{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;gap:12px}.eyebrow{font-size:11px;color:var(--muted);letter-spacing:1.3px;text-transform:uppercase}.title{font-size:26px;font-weight:750;letter-spacing:-.8px;margin:3px 0}.date{color:var(--muted);font-size:12px}.topright{display:flex;gap:9px;align-items:center}.btn{padding:9px 13px;border-radius:9px;background:linear-gradient(110deg,#6558e8,#8c55d9);box-shadow:0 4px 12px #6558e822;color:#fff;font-weight:650}.btn.secondary{background:var(--panel);color:var(--ink);border:1px solid var(--line)}.btn.danger{background:#fff0f1;color:#bb3d4b}.iconbtn{background:var(--panel);border:1px solid var(--line);color:var(--ink);border-radius:9px;padding:9px 11px}.grid{display:grid;gap:15px}.stats{grid-template-columns:repeat(4,minmax(0,1fr));margin-bottom:16px}.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:17px;box-shadow:var(--shadow);min-width:0}.stathead{display:flex;justify-content:space-between;color:var(--muted);font-size:12px}.statnum{font-size:27px;font-weight:760;letter-spacing:-1px;margin:8px 0 2px}.statfoot{font-size:11px;color:var(--muted)}.accentdot{width:8px;height:8px;border-radius:50%;background:var(--accent);display:inline-block}.cols{grid-template-columns:1.35fr 1fr}.sectionhead{display:flex;justify-content:space-between;align-items:center;margin:3px 0 13px}.sectionhead h2{font-size:16px;margin:0}.muted{color:var(--muted)}.small{font-size:12px}.progress{height:7px;background:var(--line);border-radius:10px;overflow:hidden}.progress span{height:100%;display:block;background:linear-gradient(90deg,#6558e8,#c05bd5,#f17b9a);border-radius:10px}.subjectrow{padding:13px 0;border-bottom:1px solid var(--line)}.subjectrow:last-child{border:0}.rowtop{display:flex;justify-content:space-between;gap:10px;margin-bottom:8px}.rowtop b{font-size:13px}.tag{font-size:10px;padding:3px 7px;border-radius:20px;background:var(--soft);color:var(--accent);white-space:nowrap}.task{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--line)}.task:last-child{border:0}.task input{accent-color:var(--accent)}.task .grow{flex:1;min-width:0}.task strong{display:block;font-size:12px}.task small{color:var(--muted)}.empty{padding:22px;text-align:center;color:var(--muted);font-size:12px}.toolbar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}.field{background:var(--panel);border:1px solid var(--line);color:var(--ink);padding:9px 10px;border-radius:8px;min-width:0}.field:focus{outline:2px solid #6558e833;border-color:var(--accent)}.toolbar .field{flex:1;min-width:130px}table{width:100%;border-collapse:collapse;font-size:12px}th{text-align:left;color:var(--muted);font-weight:600;padding:10px 8px;border-bottom:1px solid var(--line);white-space:nowrap}td{padding:10px 8px;border-bottom:1px solid var(--line);vertical-align:middle}tr:last-child td{border:0}.tablewrap{overflow:auto}.pill{padding:4px 8px;border-radius:20px;background:var(--soft);color:var(--accent);font-size:10px}.actions{display:flex;gap:5px}.linkbtn{background:transparent;color:var(--accent);padding:4px}.formgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.formgrid label{display:block;color:var(--muted);font-size:11px;margin-bottom:4px}.formgrid input,.formgrid select,.formgrid textarea{width:100%}.formgrid .wide{grid-column:1/-1}.modalback{position:fixed;inset:0;background:#09111dcc;display:none;align-items:center;justify-content:center;padding:15px;z-index:20}.modal{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:20px;width:min(720px,100%);max-height:90vh;overflow:auto}.modalhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px}.modalhead h2{margin:0;font-size:18px}.modalfoot{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}.timer{font-size:64px;font-weight:800;letter-spacing:-3px;text-align:center;margin:20px 0}.timercontrols{display:flex;justify-content:center;gap:8px;flex-wrap:wrap}.preset{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}.preset button{padding:8px 12px;border-radius:8px;background:var(--soft);color:var(--accent)}.ring{width:118px;height:118px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--accent) var(--pct,0%),var(--line) 0);margin:auto}.ring:before{content:attr(data-value);width:96px;height:96px;border-radius:50%;background:var(--panel);display:grid;place-items:center;font-size:22px;font-weight:750}.chartbars{display:flex;align-items:end;gap:9px;height:145px;padding-top:12px}.barwrap{flex:1;text-align:center;font-size:10px;color:var(--muted)}.bar{background:var(--accent);border-radius:5px 5px 0 0;min-height:2px;margin-bottom:6px;opacity:.85}.hidden{display:none!important}.mobilebar{display:none}.notice{background:var(--soft);color:var(--accent);padding:11px 13px;border-radius:10px;font-size:12px;margin-bottom:14px}.calendargrid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}.calday{background:var(--panel);border:1px solid var(--line);border-radius:8px;min-height:72px;padding:7px;font-size:11px}.calday .dot{width:5px;height:5px;border-radius:50%;background:var(--accent);display:inline-block;margin-right:3px}.checklist label{display:flex;gap:9px;padding:9px 0;border-bottom:1px solid var(--line)}.checklist input{accent-color:var(--accent)}
+.quote-banner{position:relative;overflow:hidden;margin:-8px 0 18px;padding:16px 19px;border-radius:14px;color:#fff;background:linear-gradient(110deg,#6558e8 0%,#a34bd8 48%,#ed6b91 100%);box-shadow:0 10px 28px #8c65df30}.quote-banner:after{content:'✦';position:absolute;right:22px;top:-22px;font-size:100px;opacity:.16}.quote-banner b{display:block;font-size:14px}.quote-banner span{font-size:11px;opacity:.88}.celebrate-backdrop{position:fixed;inset:0;background:#101827c9;display:none;align-items:center;justify-content:center;padding:20px;z-index:100;backdrop-filter:blur(7px)}
+.celebrate-card{position:relative;overflow:hidden;width:min(520px,100%);padding:34px 26px;text-align:center;border-radius:24px;background:linear-gradient(145deg,#fff 0%,#f4f0ff 48%,#e9fff6 100%);color:#182235;box-shadow:0 25px 90px #0005;animation:celebratePop .45s cubic-bezier(.2,.9,.3,1.2)}
+.celebrate-card:before,.celebrate-card:after{content:'✦　✧　✦　✧　✦';position:absolute;left:0;right:0;color:#8b7cf6;letter-spacing:14px;font-size:18px;opacity:.7}
+.celebrate-card:before{top:12px}.celebrate-card:after{bottom:12px}
+.celebrate-emoji{font-size:54px;margin:12px 0}.celebrate-card h2{font-size:27px;margin:8px 0}.celebrate-card p{color:#536078}.celebrate-quote{font-size:16px;font-weight:700;margin:18px auto;max-width:390px;color:#5145b8!important}
+@keyframes celebratePop{from{opacity:0;transform:translateY(18px) scale(.92)}to{opacity:1;transform:translateY(0) scale(1)}}
+.confetti{position:absolute;inset:0;pointer-events:none;overflow:hidden}.confetti i{position:absolute;top:-20px;width:8px;height:15px;border-radius:3px;animation:confettiFall 2.8s linear infinite}
+.confetti i:nth-child(5n+1){background:#ffbe55}.confetti i:nth-child(5n+2){background:#8c7cf6}.confetti i:nth-child(5n+3){background:#38c99a}.confetti i:nth-child(5n+4){background:#ff7891}.confetti i:nth-child(5n){background:#5bb8f5}
+@keyframes confettiFall{to{transform:translateY(620px) rotate(720deg)}}
+@media(max-width:680px){.celebrate-card{padding:28px 18px}.celebrate-card h2{font-size:23px}}@media(max-width:1000px){.sidebar{width:215px}.main{margin-left:215px;width:calc(100% - 215px);padding:22px 18px}.stats{grid-template-columns:repeat(2,1fr)}.cols{grid-template-columns:1fr}}@media(max-width:680px){.sidebar{transform:translateX(-100%);transition:.2s;width:260px}.sidebar.open{transform:translateX(0)}.main{margin:0;width:100%;padding:16px 13px 45px}.mobilebar{display:flex;align-items:center;gap:10px;margin-bottom:15px}.top{align-items:flex-start}.title{font-size:21px}.topright .btn{display:none}.stats{gap:9px}.card{padding:13px}.statnum{font-size:23px}.formgrid{grid-template-columns:1fr 1fr}.timer{font-size:54px}.calendargrid{gap:3px}.calday{min-height:55px;padding:4px;font-size:10px}}@media(min-width:1400px){.main{padding:32px 42px}.stats{grid-template-columns:repeat(4,1fr)}}
 
-        /* Inline Block Context Panel styles */
-        .inline-block-node { background: rgba(249, 115, 22, 0.04); border: 1px dashed var(--orange); border-radius: 8px; padding: 12px; margin-bottom: 12px; }
-        .inline-block-node-title { font-size: 0.85rem; font-weight: 700; color: var(--orange); margin-bottom: 6px; display: flex; justify-content: space-between; }
-        
-        /* Subject Stats List Display */
-        .stat-grid { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
-        .stat-row { display: flex; justify-content: space-between; font-size: 0.8rem; padding: 6px 8px; background: rgba(255,255,255,0.01); border: 1px solid var(--border); border-radius: 6px; }
-        .stat-hours-count { font-weight: 700; color: var(--blue); }
+/* Landing page refresh */
+:root{--accent:#8b70ff;--soft:#eeeaff}
+[data-theme=dark]{--bg:#090e1b;--panel:#111a2b;--ink:#f2f4ff;--muted:#9ba8c3;--line:#26334b;--soft:#282342;--nav:#080d18;--shadow:0 16px 45px #0004}
+body{background:radial-gradient(ellipse at 78% -12%,#6d50bd16,transparent 36%),var(--bg)}
+.sidebar{background:linear-gradient(180deg,#10182a 0%,#090f1c 100%);border-right:1px solid #ffffff0c;padding-top:25px}
+.brand{padding:10px 13px 25px}.brand b{font-size:14px;letter-spacing:1px}.brand b:first-letter{color:#a58cff}
+.nav button{border:1px solid transparent;border-radius:11px;padding:11px 12px;transition:.18s ease}.nav button:hover{background:#ffffff0c;transform:translateX(2px)}.nav button.active{background:linear-gradient(100deg,#8a6cff30,#d66bc51c);border-color:#a58cff30;color:#fff;box-shadow:inset 3px 0 #a58cff}
+.main{padding-top:28px}.top{padding:0 2px 17px;border-bottom:1px solid var(--line);margin-bottom:22px}.eyebrow{letter-spacing:1.8px;font-weight:700}.title{font-size:25px}.iconbtn{border-radius:12px}
+.landing-hero{position:relative;isolation:isolate;overflow:hidden;min-height:340px;margin:2px 0 23px;padding:36px 39px 62px;border:1px solid #a78cff30;border-radius:25px;background:linear-gradient(112deg,#17152e 0%,#202044 46%,#30224e 100%);color:#fff;box-shadow:0 22px 60px #100c2c40}
+.landing-hero:before{content:"";position:absolute;z-index:-1;width:480px;height:480px;right:7%;top:-260px;border-radius:50%;background:radial-gradient(circle,#a56bff48,transparent 68%)}
+.landing-hero:after{content:"";position:absolute;z-index:-1;width:360px;height:360px;right:20%;bottom:-300px;border-radius:50%;background:radial-gradient(circle,#f17abf35,transparent 68%)}
+.hero-copy{position:relative;z-index:2;max-width:560px}.hero-kicker{display:flex;align-items:center;gap:9px;color:#c6b9ff;font-size:10px;font-weight:800;letter-spacing:2px}.hero-pulse{width:7px;height:7px;border-radius:50%;background:#72e6bb;box-shadow:0 0 0 5px #72e6bb20}
+.landing-hero h1{font-size:clamp(38px,5vw,57px);line-height:1.02;letter-spacing:-2.2px;margin:21px 0 13px;font-weight:850}.landing-hero h1 em{font-style:normal;background:linear-gradient(90deg,#b5a1ff,#f49acb 65%,#ffc58b);-webkit-background-clip:text;background-clip:text;color:transparent}.landing-hero p{max-width:440px;color:#c3c2dc;font-size:14px;line-height:1.7;margin:0}.hero-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:23px}.hero-actions button{border-radius:11px;padding:12px 16px;font-weight:750;font-size:12px}.hero-primary{background:linear-gradient(110deg,#9b7aff,#dc72bd);color:#fff;box-shadow:0 8px 24px #a16bff45}.hero-ghost{background:#ffffff10;border:1px solid #ffffff25!important;color:#fff}.hero-quote{margin-top:22px;color:#c7b9ed;font-size:11px;font-weight:600}
+.exam-countdown{display:flex;align-items:center;gap:15px;margin-top:18px;padding:12px 15px;width:max-content;max-width:100%;border:1px solid #ffffff27;border-radius:14px;background:#ffffff0d;backdrop-filter:blur(8px)}.countdown-number{font-size:31px;line-height:1;font-weight:900;letter-spacing:-1.5px;background:linear-gradient(90deg,#c1adff,#ffacd4);-webkit-background-clip:text;background-clip:text;color:transparent;min-width:50px}.countdown-copy b{display:block;color:#fff;font-size:11px;letter-spacing:.8px;text-transform:uppercase}.countdown-copy span{display:block;color:#c3c2dc;font-size:10px;margin-top:3px}.countdown-edit{margin-left:5px;padding:6px 9px;border:1px solid #ffffff2c;border-radius:8px;background:#ffffff12;color:#fff;font-size:10px;font-weight:700;white-space:nowrap}.hero-orbit{position:absolute;width:340px;height:290px;right:5%;top:21px;display:grid;place-items:center}.orbit{position:absolute;border:1px solid #c7a8ff30;border-radius:50%;transform:rotate(-22deg)}.orbit-one{width:260px;height:190px}.orbit-two{width:320px;height:240px;transform:rotate(48deg);border-color:#f5a5d52b}.orbit-core{width:126px;height:126px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:radial-gradient(circle at 35% 25%,#7964ba,#28214c 72%);border:1px solid #d4c1ff70;box-shadow:0 0 0 13px #a78cff0c,0 0 60px #9c72ff55}.orbit-core span{font-size:33px;font-weight:900;letter-spacing:-2px}.orbit-core b{font-size:10px;letter-spacing:3px;color:#e2d8ff}.orbit-core small{font-size:8px;color:#c6b7ef;letter-spacing:2px;margin-top:5px}.orbit-chip{position:absolute;display:flex;align-items:center;gap:7px;background:#171b35e8;border:1px solid #ffffff25;border-radius:30px;padding:8px 12px;color:#fff;font-size:11px;box-shadow:0 8px 25px #0004}.orbit-chip span{color:#ded8f7;font-weight:650}.chip-one{top:24px;left:24px}.chip-two{right:0;top:116px}.chip-three{bottom:12px;left:65px}.hero-bottom{position:absolute;left:39px;right:39px;bottom:0;height:42px;border-top:1px solid #ffffff19;display:flex;align-items:center;gap:25px;color:#b7afd6;font-size:9px;font-weight:800;letter-spacing:1.4px}.landing-section-label{display:flex;align-items:center;gap:12px;margin:22px 2px 12px;color:var(--muted);font-size:9px;font-weight:850;letter-spacing:1.6px}.label-line{height:1px;background:var(--line);flex:1}.label-date{letter-spacing:.4px;font-weight:650}
+.stats .card{border-radius:16px;position:relative;overflow:hidden}.stats .card:after{content:"";position:absolute;right:-25px;top:-30px;width:90px;height:90px;border-radius:50%;background:linear-gradient(135deg,#a58cff16,#f17abf08)}.statnum{letter-spacing:-1.4px}.card{border-radius:16px;transition:border-color .18s,transform .18s}.card:hover{border-color:#9c82ff55}.sectionhead h2{letter-spacing:-.3px}.quote-banner{border-radius:15px}
+.quick-launch{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:0 0 16px}.quick-launch button{display:flex;align-items:center;gap:10px;text-align:left;padding:13px 12px;border:1px solid var(--line);border-radius:14px;background:var(--panel);color:var(--ink);box-shadow:var(--shadow);min-width:0;transition:.18s}.quick-launch button:hover{transform:translateY(-2px);border-color:#9c82ff88}.quick-launch button>span:nth-child(2){display:flex;flex-direction:column;min-width:0}.quick-launch b{font-size:11px}.quick-launch small{font-size:9px;color:var(--muted);margin-top:2px}.quick-launch i{font-style:normal;color:var(--muted);margin-left:auto}.quick-icon{width:34px;height:34px;display:grid;place-items:center;flex:none;border-radius:10px;font-size:13px;font-weight:850}.quick-icon.violet{background:#8b70ff20;color:#a58cff}.quick-icon.pink{background:#ed75b31c;color:#e982b9}.quick-icon.blue{background:#5faeff1c;color:#70b8ff}.quick-icon.green{background:#54d6a31c;color:#62d9aa}
+@media(max-width:1100px){.hero-orbit{right:-35px;opacity:.75}.hero-copy{max-width:520px}.quick-launch{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:760px){.landing-hero{padding:27px 22px 62px;min-height:365px}.landing-hero h1{font-size:41px}.landing-hero p{max-width:90%;font-size:12px}.hero-orbit{width:190px;height:170px;right:-55px;top:160px;opacity:.5;transform:scale(.75)}.hero-bottom{left:22px;right:22px;gap:12px;overflow:hidden;white-space:nowrap;font-size:7px}.hero-quote{max-width:75%;line-height:1.5}.exam-countdown{gap:10px;padding:10px 11px}.countdown-number{font-size:27px}.countdown-edit{font-size:9px;padding:6px}.quick-launch{gap:8px}.quick-launch button{padding:10px 8px}.quick-launch small{font-size:8px}.landing-section-label{font-size:8px}}
+@media(max-width:420px){.quick-launch{grid-template-columns:1fr 1fr}.quick-launch button{gap:7px}.quick-icon{width:30px;height:30px}}
+</style></head>
+<body><div class="app">
+<aside class="sidebar" id="sidebar"><div class="brand"><b>◈ CA INTER COMMAND</b><span>JANUARY 2027 · GROUP II</span></div><nav class="nav" id="nav">
+<div class="navlabel">Workspace</div>
+<button data-page="dashboard" class="active">◫　Dashboard</button><button data-page="planner">▦　Daily Planner</button><button data-page="subjects">◉　Subject Management</button><button data-page="chapters">▤　Chapter Tracker</button><button data-page="lectures">▷　Lecture Tracker</button>
+<div class="navlabel">Four revision cycles</div><button data-page="revision1">01　Revision 1</button><button data-page="revision2">02　Revision 2</button><button data-page="revision3">03　Revision 3</button><button data-page="rtp">↗　Revision 4 · RTP</button><button data-page="mtp">↗　Revision 4 · MTP</button><button data-page="pyq">↗　Revision 4 · PYQ</button>
+<div class="navlabel">Performance</div><button data-page="focus">◷　Focus Room</button><button data-page="mocks">▣　Mock Tests</button><button data-page="mistakes">✎　Mistake Book</button><button data-page="analytics">⌁　Analytics</button><button data-page="calendar">▦　Calendar</button><button data-page="journal">▧　Daily Journal</button><button data-page="exam">⚑　Examination Mode</button>
+<div class="navlabel">System</div><button data-page="settings">⚙　Settings & Backup</button></nav></aside>
+<main class="main"><div class="mobilebar"><button class="iconbtn" id="menu">☰</button><b>CA INTER COMMAND</b></div>
+<header class="top"><div><div class="eyebrow">Your preparation cockpit</div><div class="title" id="pageTitle">Good morning. Let's make it count.</div><div class="date" id="todayLabel"></div></div><div class="topright"><button class="iconbtn" id="theme">☾</button><button class="btn" onclick="openTask()">＋ Add study task</button></div></header>
+<div id="view"></div></main></div>
+<div class="celebrate-backdrop" id="celebrateBackdrop" role="dialog" aria-modal="true" aria-labelledby="celebrateTitle">
+<div class="celebrate-card"><div class="confetti" id="confetti"></div><div class="celebrate-emoji">🎉🏆✨</div>
+<h2 id="celebrateTitle">Daily target conquered!</h2><p id="celebrateMessage">You showed up, stayed focused and got it done.</p>
+<p class="celebrate-quote" id="celebrateQuote"></p><button class="btn" onclick="closeCelebration()">Keep the momentum</button></div></div>
+<div class="modalback" id="modalback"><div class="modal"><div class="modalhead"><h2 id="modalTitle">Add record</h2><button class="iconbtn" onclick="closeModal()">✕</button></div><div id="modalBody"></div><div class="modalfoot"><button class="btn secondary" onclick="closeModal()">Cancel</button><button class="btn" id="modalSave">Save record</button></div></div></div>
+<script>
+const subjects=['Costing','Audit','FM','SM'], full={Costing:'Cost and Management Accounting',Audit:'Auditing and Ethics',FM:'Financial Management',SM:'Strategic Management'};
+// ICAI chapter structure applicable to the January 2027 examination.
+const chapters={
+Costing:['Introduction to Cost and Management Accounting','Material Cost','Employee Cost and Direct Expenses','Overheads – Absorption Costing Method','Activity Based Costing','Cost Sheet','Cost Accounting Systems','Unit & Batch Costing','Job Costing','Process & Operation Costing','Joint Products and By Products','Service Costing','Standard Costing','Marginal Costing','Budgets and Budgetary Control'],
+Audit:['Nature, Objective and Scope of Audit','Audit Strategy, Audit Planning and Audit Programme','Risk Assessment and Internal Control','Audit Evidence','Audit of Items of Financial Statements','Audit Documentation','Completion and Review','Audit Report','Special Features of Audit of Different Type of Entities','Audit of Banks','Ethics and Terms of Audit Engagements'],
+FM:['Scope and Objectives of Financial Management','Types of Financing','Financial Analysis and Planning – Ratio Analysis','Cost of Capital','Financing Decisions – Capital Structure','Financing Decisions – Leverages','Investment Decisions','Dividend Decision','Management of Working Capital'],
+SM:['Introduction to Strategic Management','Strategic Analysis: External Environment','Strategic Analysis: Internal Environment','Strategic Choices','Strategy Implementation and Evaluation']
+};
+const blank=()=>({chapters:[],tasks:[],lectures:[],practice:[],mocks:[],mistakes:[],sessions:[],journals:[],targets:{daily:10,weekly:60,monthly:240,pomodoro:8,exam:'2027-01-08'},settings:{theme:'dark'},weeklyNotes:''});
+let db;try{db=JSON.parse(localStorage.getItem('cainter_command_v1'))||blank()}catch(e){db=blank()}
+Object.keys(blank()).forEach(k=>{if(db[k]===undefined)db[k]=blank()[k]});
+function save(){localStorage.setItem('cainter_command_v1',JSON.stringify(db));}
+function id(){return Math.random().toString(36).slice(2,10)}
+function dateStr(d=new Date()){return d.toISOString().slice(0,10)}
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function seedChapters(){if(db.chapters.length)return;subjects.forEach(s=>chapters[s].forEach((name,i)=>db.chapters.push({id:id(),subject:s,name,lectureTotal:s==='SM'?17:0,lectureDone:0,difficulty:'Medium',confidence:0,priority:'Normal',lastStudied:'',revisions:[{}, {}, {}, {}],focused:0,questionStatus:'Not started',testMarks:'',notes:''})));save()}
+seedChapters();
+// Keep existing progress intact while syncing chapter titles to the Jan 2027 ICAI list.
+subjects.forEach(subject=>{const rows=db.chapters.filter(c=>c.subject===subject);chapters[subject].forEach((name,i)=>{if(rows[i])rows[i].name=name;});});
+// The 85-hour SM backlog is a single editable item, not artificially split by chapter.
+db.lectures=Array.isArray(db.lectures)?db.lectures:[];
+let smBacklog=db.lectures.find(x=>x.key==='sm-pending-lump');
+if(!smBacklog){smBacklog={id:id(),key:'sm-pending-lump',subject:'SM',name:'SM Lectures (pending)',lectureTotal:85,lectureDone:0};db.lectures.push(smBacklog);}
+if(!db.settings)db.settings={};if(!db.settings.themePreferenceInitialized){db.settings.theme='dark';db.settings.themePreferenceInitialized=true;}
+save();
+let page='dashboard', timer={running:false,mode:'study',remaining:1500,total:1500,started:null,interval:null,paused:false,study:25,brk:5,subject:'Costing',chapter:'',revision:1,activity:'Question practice',sessionId:null};
+const $=s=>document.querySelector(s);
+function pct(a,b){return b?Math.min(100,Math.round(a/b*100)):0}
+function hours(n){return (Number(n||0)).toFixed(1)}
+function chapterOptions(s){return db.chapters.filter(c=>!s||c.subject===s).map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('')}
+function setPage(p){page=p;$('#sidebar').classList.remove('open');document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===p));render()}
+$('#nav').addEventListener('click',e=>{let b=e.target.closest('button[data-page]');if(b)setPage(b.dataset.page)});
+$('#menu').onclick=()=>$('#sidebar').classList.toggle('open');
+function toggleTheme(){db.settings.theme=db.settings.theme==='dark'?'light':'dark';save();applyTheme();if(page==='settings')render()}
+$('#theme').onclick=toggleTheme;
+function applyTheme(){const dark=db.settings.theme==='dark';document.documentElement.dataset.theme=dark?'dark':'light';$('#theme').textContent=dark?'☀':'☾';$('#theme').title=dark?'Switch to light mode':'Switch to dark mode';document.querySelector('meta[name=theme-color]')?.setAttribute('content',dark?'#0d1421':'#f4f6fa')}applyTheme();
+$('#todayLabel').textContent=new Date().toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+function heading(t,sub=''){ $('#pageTitle').textContent=t; return `<div class="sectionhead"><h2>${t}</h2><span class="muted small">${sub}</span></div>`}
+function stat(label,value,foot){return `<div class="card"><div class="stathead">${label}<span class="accentdot"></span></div><div class="statnum">${value}</div><div class="statfoot">${foot||''}</div></div>`}
+function subjectProgress(s){let cs=db.chapters.filter(c=>c.subject===s);let n=cs.length*4,done=cs.reduce((a,c)=>a+c.revisions.filter(r=>r.done).length,0);return {chapters:cs.length,done,p:pct(done,n),hours:db.sessions.filter(x=>x.subject===s&&x.status==='Completed').reduce((a,x)=>a+x.minutes,0)/60,lect:cs.reduce((a,c)=>a+c.lectureDone,0),total:cs.reduce((a,c)=>a+c.lectureTotal,0)}}
+function daySessions(d=dateStr()){return db.sessions.filter(s=>s.date===d&&s.status!=='Abandoned')}
+function dayHours(d=dateStr()){return daySessions(d).reduce((a,s)=>a+s.minutes,0)/60}
+function taskRows(tasks){return tasks.length?tasks.map(t=>`<div class="task"><input type="checkbox" ${t.status==='Completed'?'checked':''} onchange="toggleTask('${t.id}')"><div class="grow"><strong>${esc(t.title)}</strong><small>${esc(t.subject||'General')} · ${esc(t.date||'No date')} · ${t.hours||0}h planned${t.autoGenerated?' · <span style="color:var(--accent)">Auto reminder</span>':''}</small></div><span class="pill">${esc(t.priority||'Normal')}</span></div>`).join(''):'<div class="empty">No tasks here yet. Add one to give the day a direction.</div>'}
+function dashboard(){let target=Number(db.targets.daily||0),actual=dayHours(),days=Math.ceil((new Date(db.targets..exam+'T00:00:00')-new Date())/86400000),pending=db.chapters.filter(c=>!c.revisions.every(r=>r.done)).length,today=db.tasks.filter(t=>t.date===dateStr());const quotes=['Small steps, repeated daily, build extraordinary results.','You do not need a perfect day. You need a start.','Progress is progress, even when it is quiet.','Discipline today creates options tomorrow.','One focused hour is a vote for the future you want.','Keep showing up. Your effort is adding up.','A difficult chapter is still just a chapter. Keep going.'];let quote=quotes[(Math.floor(Date.now()/86400000))%quotes.length];return `
+<section class="landing-hero">
+ <div class="hero-copy"><div class="hero-kicker"><span class="hero-pulse"></span> JANUARY 2027 · GROUP II</div>
+  <h1>Your next chapter<br><em>starts today.</em></h1>
+  <p>One focused session at a time. Your entire CA Inter preparation, organised in one place.</p>
+  <div class="hero-actions"><button class="hero-primary" onclick="setPage('focus')">▶ &nbsp; Start a focus session</button><button class="hero-ghost" onclick="setPage('planner')">＋ &nbsp; Plan my day</button></div>
+  <div class="exam-countdown" aria-live="polite"><div class="countdown-number" id="heroCountdownDays">--</div><div class="countdown-copy"><b>Days until Group II starts</b><span id="heroCountdownDate">Target: ${esc(db.targets.exam)}</span><span style="display:block;margin-top:4px;font-size:9px;opacity:.85">Costing 8 Jan · Audit 10 Jan · FM+SM 12 Jan 2027</span></div><button class="countdown-edit" onclick="setPage('settings')">Edit date ↗</button></div>
+  <div class="hero-quote">✦ &nbsp; “${quote}”</div>
+ </div>style="width:${x.p}%"></span></div><div class="small muted" style="margin-top:6px">${x.chapters} chapters · ${hours(x.hours)} focused hours · ${hours(x.lect)}/${hours(x.total)} lecture hours</div></div>`}).join('')}</div>
+<div class="card">${heading('Today’s plan',new Date().toLocaleDateString('en-IN',{day:'numeric',month:'short'} ) )}<div class="toolbar"><button class="btn" onclick="openTask()">＋ Add task</button><button class="btn secondary" onclick="setPage('focus')">Start focus session</button></div>${taskRows(today)}</div>
+<div class="card">${heading('Four-revision pulse','RTP, MTP and PYQ are separate Revision 4 tracks')} ${[1,2,3,4].map(n=>{let total=db.chapters.length,done=db.chapters.filter(c=>c.revisions[n-1]?.done).length;return `<div class="subjectrow"><div class="rowtop"><b>Revision ${n}</b><span class="muted small">${done}/${total} chapters</span></div><div class="progress"><span style="width:${pct(done,total)}%"></span></div></div>`}).join('')}<div class="small muted">Revision 4 practice completion is tracked independently below.</div></div>
+<div class="card">${heading('Focus snapshot','Only completed focus minutes count')}<div class="grid" style="grid-template-columns:1fr 1fr"><div><div class="statnum">${daySessions().length}</div><div class="muted small">Completed sessions today</div></div><div><div class="statnum">${Math.round(actual*60)}m</div><div class="muted small">Focused minutes today</div></div></div><button class="btn secondary" style="margin-top:12px" onclick="setPage('analytics')">View analytics →</button></div></div>`}
+function chaptersPage(){return `${heading('Master chapter tracker','Every chapter carries four independent revision records')}<div class="toolbar"><input class="field" id="chSearch" placeholder="Search chapters…" oninput="renderChapterRows()"><select class="field" id="chSub" onchange="renderChapterRows()"><option value="">All subjects</option>${subjects.map(s=>`<option>${s}</option>`).join('')}</select><select class="field" id="chSort" onchange="renderChapterRows()"><option value="subject">Subject order</option><option value="priority">Priority first</option><option value="confidence">Lowest confidence</option><option value="name">Chapter name</option></select><button class="btn" onclick="openChapter()">＋ Add chapter</button></div><div class="card tablewrap"><table><thead><tr><th>Chapter</th><th>Subject</th><th>Lectures</th><th>Rev 1</th><th>Rev 2</th><th>Rev 3</th><th>RTP</th><th>MTP</th><th>PYQ</th><th>Writing practice</th><th>Confidence</th><th></th></tr></thead><tbody id="chapterRows"></tbody></table></div>`}
+function renderChapterRows(){let q=($('#chSearch')?.value||'').toLowerCase(),s=$('#chSub')?.value||'',sort=$('#chSort')?.value||'subject';let a=db.chapters.filter(c=>(!s||c.subject===s)&&c.name.toLowerCase().includes(q));a.sort((x,y)=>sort==='name'?x.name.localeCompare(y.name):sort==='confidence'?x.confidence-y.confidence:sort==='priority'?(['High','Normal','Low'].indexOf(x.priority)-['High','Normal','Low'].indexOf(y.priority)):subjects.indexOf(x.subject)-subjects.indexOf(y.subject));$('#chapterRows').innerHTML=a.map(c=>`<tr><td><b>${esc(c.name)}</b><div class="muted small">${esc(c.difficulty)} · ${esc(c.priority)}</div></td><td>${c.subject}</td><td>${hours(c.lectureDone)}/${hours(c.lectureTotal)}h</td>${[0,1,2].map(i=>`<td><input type="checkbox" ${c.revisions[i]?.done?'checked':''} onchange="revisionToggle('${c.id}',${i})"></td>`).join('')}${['rtp','mtp','pyq'].map(k=>`<td><span class="pill">${practicePct(c.id,k)}%</span></td>`).join('')}<td>${['Costing','FM'].includes(c.subject)?`<label title="Tick after completing writing practice"><input type="checkbox" ${c.writingPracticeDone?'checked':''} onchange="toggleWritingPractice('${c.id}',this.checked)"> <span class="small">${c.writingPracticeDone?'Done':'Track'}</span></label>`:'—'}</td><td>${c.confidence||'–'}/5</td><td><button class="linkbtn" onclick="openChapter('${c.id}')">Edit</button></td></tr>`).join('')||'<tr><td colspan="12" class="empty">No chapters match this filter.</td></tr>'}
+function practicePct(cid,type){let a=db.practice.filter(x=>x.chapterId===cid&&x.type===type);return pct(a.filter(x=>x.status==='Completed').length,a.length)}
+function revisionChecklistItems(subject){if(subject==='Audit')return [['selfTesting','Self testing'],['cumulativeRevision','Cumulative revision'],['questionBank','Question bank']];if(['FM','Costing'].includes(subject))return [['writingPractice','Writing practice'],['repeatDays','Day 1 & Day 3 repeat']];return []}
+function revisionPage(n){let i=n-1;return `${heading('Revision '+n, n===4?'Exam practice is split into independent RTP, MTP and PYQ trackers':'Chapter-level completion and confidence') }<div class="notice">${n===4?'Revision 4 is not a single checkbox. Track RTP, MTP and PYQ separately using the three dedicated modules.':'Use the subject-specific checklist for every chapter. Audit: self testing, cumulative revision and question bank. FM & Costing: writing practice followed by Day 1 and Day 3 repeats.'}</div><div class="card tablewrap"><table><thead><tr><th>Chapter</th><th>Subject</th><th>Revision checklist</th><th>Completed</th><th>Hours</th><th>Date</th><th>Confidence</th><th>Notes</th></tr></thead><tbody>${db.chapters.map(c=>{let r=c.revisions[i]||(c.revisions[i]={}),items=revisionChecklistItems(c.subject);return `<tr><td>${esc(c.name)}</td><td>${c.subject}</td><td>${items.length?`<div class="checklist">${items.map(([key,label])=>`<label><input type="checkbox" ${r.checklist?.[key]?'checked':''} onchange="revisionChecklistToggle('${c.id}',${i},'${key}',this.checked)"><span>${label}</span></label>`).join('')}</div>`:'—'}</td><td><input type="checkbox" ${r.done?'checked':''} onchange="revisionToggle('${c.id}',${i})"></td><td><input class="field" style="width:65px" type="number" min="0" step=".25" value="${r.hours||''}" onchange="setRev('${c.id}',${i},'hours',this.value)"></td><td><input class="field" type="date" value="${r.date||''}" onchange="setRev('${c.id}',${i},'date',this.value)"></td><td><select class="field" onchange="setRev('${c.id}',${i},'confidence',this.value)"><option value="">–</option>${[1,2,3,4,5].map(v=>`<option ${r.confidence==v?'selected':''}>${v}</option>`).join('')}</select></td><td><input class="field" placeholder="Notes" value="${esc(r.notes||'')}" onchange="setRev('${c.id}',${i},'notes',this.value)"></td></tr>`}).join('')}</tbody></table></div>`}
+function revisionChecklistToggle(cid,i,key,checked){let c=db.chapters.find(x=>x.id===cid);if(!c)return;c.revisions[i]??={};c.revisions[i].checklist??={};c.revisions[i].checklist[key]=checked;if(key==='writingPractice'){c.revisions[i].writingPracticeDate=checked?dateStr():null;let prefix=`revision-writing-${cid}-r${i+1}-`;if(checked){[1,3].forEach(day=>{let autoKey=prefix+dateStr()+`-day${day}`,existing=db.tasks.find(t=>t.autoKey===autoKey);if(!existing)db.tasks.push({id:id(),autoKey,title:`📌 Day ${day} Writing Practice Repeat · ${c.name} (Rev ${i+1})`,subject:c.subject,chapterId:cid,revision:i+1,activity:'Writing practice repeat',date:addDays(dateStr(),day),hours:0.5,actual:0,priority:'High',status:'Pending',autoGenerated:true});});toast('Writing practice done. Day 1 + Day 3 revision reminders added to your planner.');}else{db.tasks.forEach(t=>{if(t.autoKey?.startsWith(prefix)&&t.status!=='Completed')t.status='Cancelled'});toast('Uncompleted repeat reminders cancelled.');}}save();render();}
+function practicePage(type){let name=type.toUpperCase(),a=db.practice.filter(x=>x.type===type);return `${heading('Revision 4 · '+name,'Independent question-level tracker for each subject')}<div class="toolbar"><select class="field" id="prSub"><option value="">All subjects</option>${subjects.map(s=>`<option>${s}</option>`).join('')}</select><select class="field" id="prStatus"><option value="">All statuses</option><option>Pending</option><option>In progress</option><option>Completed</option></select><button class="btn" onclick="openPractice('${type}')">＋ Add ${name}</button></div><div class="grid stats">${stat('Records',a.length,'Manually entered practice sets')}${stat('Completed',a.filter(x=>x.status==='Completed').length,'Marked completed')}${stat('Completion',pct(a.filter(x=>x.status==='Completed').length,a.length)+'%','Based on records added')}${stat('Remaining',a.filter(x=>x.status!=='Completed').length,'Open records')}</div><div class="card tablewrap"><table><thead><tr><th>Reference</th><th>Subject</th><th>Chapter</th><th>Questions</th><th>Attempted</th><th>Marks</th><th>Status</th><th>Date</th><th></th></tr></thead><tbody id="practiceRows">${practiceRows(type)}</tbody></table></div>`}
+function practiceRows(type){return db.practice.filter(x=>x.type===type).map(x=>`<tr data-sub="${x.subject}" data-status="${x.status}"><td><b>${esc(x.reference)}</b><div class="muted small">${esc(x.year||x.series||x.attempt||'')}</div></td><td>${x.subject}</td><td>${esc(db.chapters.find(c=>c.id===x.chapterId)?.name||'—')}</td><td>${x.total||0}</td><td>${x.attempted||0}</td><td>${x.marks??'—'}</td><td><select class="field" onchange="updatePractice('${x.id}','status',this.value)"><option ${x.status==='Pending'?'selected':''}>Pending</option><option ${x.status==='In progress'?'selected':''}>In progress</option><option ${x.status==='Completed'?'selected':''}>Completed</option></select></td><td>${x.date||'—'}</td><td><button class="linkbtn" onclick="editPractice('${x.id}')">Edit</button><button class="linkbtn" onclick="del('practice','${x.id}')">×</button></td></tr>`).join('')||'<tr><td colspan="9" class="empty">No practice records yet. Add your first set.</td></tr>'}
+function planner(){let d=dateStr(),a=db.tasks;return `${heading('Study planner','Plan at subject or chapter level. Record actual hours separately.')}<div class="toolbar"><input class="field" type="date" id="planDate" value="${d}" onchange="renderPlanner()"><select class="field" id="planView" onchange="renderPlanner()"><option>Daily</option><option>Weekly</option><option>Monthly</option></select><select class="field" id="planSub" onchange="renderPlanner()"><option value="">All subjects</option>${subjects.map(s=>`<option>${s}</option>`).join('')}</select><button class="btn" onclick="openTask()">＋ Plan study task</button></div><div id="plannerRows"></div>`}
+function renderPlanner(){let date=$('#planDate')?.value||dateStr(),view=$('#planView')?.value||'Daily',sub=$('#planSub')?.value||'',start=new Date(date+'T00:00:00'),end=new Date(start);if(view==='Weekly')end.setDate(end.getDate()+6);if(view==='Monthly')end.setMonth(end.getMonth()+1);let a=db.tasks.filter(t=>{let dt=new Date((t.date||date)+'T00:00:00');return dt>=start&&dt<end&&(!sub||t.subject===sub)}).sort((x,y)=>(x.date||'').localeCompare(y.date||''));$('#plannerRows').innerHTML=`<div class="grid stats">${stat('Planned hours',hours(a.reduce((n,t)=>n+Number(t.hours||0),0))+'h','Selected period')}${stat('Actual hours',hours(a.reduce((n,t)=>n+Number(t.actual||0),0))+'h','Entered manually')}${stat('Tasks complete',a.filter(t=>t.status==='Completed').length,'Of '+a.length+' tasks')}${stat('Open tasks',a.filter(t=>t.status!=='Completed').length,'Carry forward any unfinished task')}</div><div class="card tablewrap"><table><thead><tr><th>Date</th><th>Task</th><th>Subject / chapter</th><th>Revision</th><th>Planned</th><th>Actual</th><th>Priority</th><th>Status</th><th></th></tr></thead><tbody>${a.map(t=>`<tr><td>${t.date}</td><td>${esc(t.title)}</td><td>${t.subject||'—'}<div class="muted small">${esc(db.chapters.find(c=>c.id===t.chapterId)?.name||'Subject level')}</div></td><td>${t.revision||'—'}</td><td>${t.hours||0}h</td><td>${t.actual||0}h</td><td>${t.priority}</td><td><select class="field" onchange="updateTask('${t.id}','status',this.value)"><option ${t.status==='Pending'?'selected':''}>Pending</option><option ${t.status==='Partial'?'selected':''}>Partial</option><option ${t.status==='Completed'?'selected':''}>Completed</option><option ${t.status==='Cancelled'?'selected':''}>Cancelled</option></select></td><td><button class="linkbtn" onclick="editTask('${t.id}')">Edit</button><button class="linkbtn" onclick="del('tasks','${t.id}')">×</button></td></tr>`).join('')||'<tr><td colspan="9" class="empty">Nothing scheduled for this period.</td></tr>'}</tbody></table></div>`}
+function lectures(){let chapterTotal=db.chapters.reduce((a,c)=>a+c.lectureTotal,0),chapterDone=db.chapters.reduce((a,c)=>a+c.lectureDone,0),lump=db.lectures.find(x=>x.key==='sm-pending-lump'),total=chapterTotal+(lump?.lectureTotal||0),done=chapterDone+(lump?.lectureDone||0);return `${heading('Lecture tracker','Chapter-wise lecture hours plus your single SM backlog entry')}<div class="grid stats">${stat('Total lecture hours',hours(total)+'h','Chapter totals + SM backlog')}${stat('Completed',hours(done)+'h',pct(done,total)+'% complete')}${stat('Pending',hours(total-done)+'h','Remaining lecture workload')}${stat('SM initial backlog',hours(Math.max(0,(lump?.lectureTotal||0)-(lump?.lectureDone||0)))+'h','One editable lump entry')}</div><div class="card" style="margin-bottom:14px;border-left:4px solid #a34bd8"><div class="rowtop"><div><b>SM Lectures (pending)</b><div class="muted small">Single backlog entry. Split it into chapter-wise hours later if you want.</div></div><span class="pill">Strategic Management</span></div><div class="toolbar" style="margin:12px 0 0"><label class="small muted" style="align-self:center">Total hours</label><input class="field" type="number" min="0" step=".5" style="width:110px;flex:0 1 120px" value="${lump?.lectureTotal||0}" onchange="lumpLectureSet('lectureTotal',this.value)"><label class="small muted" style="align-self:center">Completed</label><input class="field" type="number" min="0" step=".25" style="width:110px;flex:0 1 120px" value="${lump?.lectureDone||0}" onchange="lumpLectureSet('lectureDone',this.value)"><b style="align-self:center;color:var(--accent)">${hours(Math.max(0,(lump?.lectureTotal||0)-(lump?.lectureDone||0)))}h pending</b></div></div><div class="card tablewrap"><h3 style="margin:0 0 10px">Chapter-wise lecture hours</h3><table><thead><tr><th>Subject</th><th>Chapter</th><th>Total hours</th><th>Completed hours</th><th>Pending</th><th>Progress</th></tr></thead><tbody>${db.chapters.map(c=>`<tr><td>${c.subject}</td><td>${esc(c.name)}</td><td><input class="field" type="number" min="0" step=".5" style="width:75px" value="${c.lectureTotal}" onchange="lectureSet('${c.id}','lectureTotal',this.value)"></td><td><input class="field" type="number" min="0" step=".25" style="width:75px" value="${c.lectureDone}" onchange="lectureSet('${c.id}','lectureDone',this.value)"></td><td>${hours(Math.max(0,c.lectureTotal-c.lectureDone))}h</td><td><div class="progress" style="width:90px"><span style="width:${pct(c.lectureDone,c.lectureTotal)}%"></span></div></td></tr>`).join('')}</tbody></table></div>`}
+function lumpLectureSet(k,v){let x=db.lectures.find(x=>x.key==='sm-pending-lump');if(!x)return;x[k]=Math.max(0,Number(v));save();render()}
+function focus(){return `${heading('Focus room','A persistent timer. Switch pages freely, your session keeps running.')}<div class="grid cols"><div class="card"><div class="eyebrow" style="text-align:center">Deep work timer</div><div class="preset"><button onclick="preset(25,5)">25 / 5</button><button onclick="preset(50,10)">50 / 10</button><button onclick="preset(90,15)">90 / 15</button><button onclick="customPreset()">Custom</button></div><div class="timer" id="timerDisplay">25:00</div><div class="muted small" style="text-align:center" id="timerMode">STUDY SESSION</div><div class="timercontrols" style="margin:18px 0"><button class="btn" id="timerToggle" onclick="toggleTimer()">Start</button><button class="btn secondary" onclick="stopTimer()">Stop</button><button class="btn secondary" onclick="resetTimer()">Reset</button><button class="btn secondary" onclick="skipBreak()">Skip break</button></div><div class="formgrid"><div><label>Subject</label><select class="field" id="fSub" onchange="timer.subject=this.value;refreshChapters()">${subjects.map(s=>`<option>${s}</option>`).join('')}</select></div><div><label>Chapter</label><select class="field" id="fChapter" onchange="timer.chapter=this.value">${chapterOptions('Costing')}</select></div><div><label>Revision</label><select class="field" id="fRev" onchange="timer.revision=Number(this.value)">${[1,2,3,4].map(n=>`<option value="${n}">Revision ${n}</option>`).join('')}</select></div><div class="wide"><label>Activity</label><select class="field" id="fActivity" onchange="timer.activity=this.value">${['Lectures','Reading','Conceptual study','Question practice','RTP','MTP','PYQ','Formula revision','Mock test'].map(x=>`<option>${x}</option>`).join('')}</select></div></div></div><div class="card">${heading('Today’s focus','Your target is adjustable in Settings')}<div class="ring" id="focusRing" data-value="${daySessions().length}/${db.targets.pomodoro}" style="--pct:${pct(daySessions().length,db.targets.pomodoro)}%"></div><p class="muted small" style="text-align:center">${hours(dayHours())} focused hours today · ${daySessions().length} completed sessions</p><div class="subjectrow"><b>Completed focus sessions</b><span style="float:right">${daySessions().length}</span></div><div class="subjectrow"><b>Focus target</b><span style="float:right">${db.targets.pomodoro} sessions</span></div><div class="subjectrow"><b>Break time today</b><span style="float:right">${db.sessions.filter(s=>s.date===dateStr()).reduce((a,s)=>a+(s.breakMinutes||0),0)} min</span></div></div></div><div class="card" style="margin-top:15px">${heading('Session history','Completed, interrupted and abandoned sessions')}<div class="tablewrap"><table><thead><tr><th>Date</th><th>Subject</th><th>Chapter</th><th>Revision</th><th>Activity</th><th>Focus</th><th>Status</th><th>Notes</th></tr></thead><tbody>${db.sessions.slice().reverse().slice(0,30).map(s=>`<tr><td>${s.date}</td><td>${s.subject}</td><td>${esc(db.chapters.find(c=>c.id===s.chapter)?.name||'—')}</td><td>${s.revision}</td><td>${s.activity}</td><td>${s.minutes}m</td><td>${s.status}</td><td>${esc(s.notes||'')}</td></tr>`).join('')||'<tr><td colspan="8" class="empty">Your focus history will appear here.</td></tr>'}</tbody></table></div></div>`}
+function mocks(){return `${heading('Mock test performance','Track full papers, ICAI MTPs and chapter tests')}<div class="toolbar"><button class="btn" onclick="openMock()">＋ Add mock test</button></div><div class="grid stats">${stat('Tests attempted',db.mocks.length,'All formats')}${stat('Average score',db.mocks.length?Math.round(db.mocks.reduce((a,m)=>a+m.marks/Math.max(1,m.max)*100,0)/db.mocks.length)+'%':'—','Percentage average')}${stat('Highest score',db.mocks.length?Math.max(...db.mocks.map(m=>Math.round(m.marks/Math.max(1,m.max)*100)))+'%':'—','Best attempt')}${stat('Lowest score',db.mocks.length?Math.min(...db.mocks.map(m=>Math.round(m.marks/Math.max(1,m.max)*100)))+'%':'—','Lowest attempt')}</div><div class="card tablewrap"><table><thead><tr><th>Test</th><th>Subject</th><th>Date</th><th>Marks</th><th>Percentage</th><th>Time</th><th>Weak chapters</th><th>Mistakes</th><th></th></tr></thead><tbody>${db.mocks.map(m=>`<tr><td>${esc(m.name)}</td><td>${m.subject}</td><td>${m.date}</td><td>${m.marks}/${m.max}</td><td>${pct(m.marks,m.max)}%</td><td>${m.time||'—'}</td><td>${esc(m.weak||'—')}</td><td>${esc(m.mistakes||'—')}</td><td><button class="linkbtn" onclick="del('mocks','${m.id}')">×</button></td></tr>`).join('')||'<tr><td colspan="9" class="empty">No mock tests recorded yet.</td></tr>'}</tbody></table></div>`}
+function mistakes(){return `${heading('Mistake book','Turn repeated errors into a targeted revision list')}<div class="toolbar"><button class="btn" onclick="openMistake()">＋ Log a mistake</button><select class="field" id="mistFilter" onchange="render()"><option value="">All statuses</option><option>Open</option><option>Resolved</option></select></div><div class="card tablewrap"><table><thead><tr><th>Subject / chapter</th><th>Category</th><th>Question</th><th>Mistake</th><th>Date</th><th>Repeats</th><th>Status</th></tr></thead><tbody>${db.mistakes.filter(m=>!$('#mistFilter')?.value||m.status===$('#mistFilter').value).map(m=>`<tr><td>${m.subject}<div class="muted small">${esc(db.chapters.find(c=>c.id===m.chapterId)?.name||'—')}</div></td><td>${m.category}</td><td>${esc(m.ref||'—')}</td><td>${esc(m.description)}</td><td>${m.date}</td><td>${m.repeats||1}</td><td><select class="field" onchange="updateMistake('${m.id}',this.value)"><option ${m.status==='Open'?'selected':''}>Open</option><option ${m.status==='Resolved'?'selected':''}>Resolved</option></select></td></tr>`).join('')||'<tr><td colspan="7" class="empty">No mistakes logged. Keep this book honest and useful.</td></tr>'}</tbody></table></div>`}
+function analytics(){let total=db.chapters.length*4,done=db.chapters.reduce((a,c)=>a+c.revisions.filter(r=>r.done).length,0),week=new Date();week.setDate(week.getDate()-6);let days=Array.from({length:7},(_,i)=>{let d=new Date(week);d.setDate(d.getDate()+i);return dateStr(d)});return `${heading('Analytics','Progress from your actual records, not decorative demo data')}<div class="grid stats">${stat('Revision completion',pct(done,total)+'%',done+' / '+total+' chapter cycles')}${stat('Total focused time',hours(db.sessions.filter(s=>s.status!=='Abandoned').reduce((a,s)=>a+s.minutes,0)/60)+'h','Across all sessions')}${stat('Practice completion',pct(db.practice.filter(x=>x.status==='Completed').length,db.practice.length)+'%','RTP, MTP and PYQ records')}${stat('Mistakes resolved',db.mistakes.filter(m=>m.status==='Resolved').length,'Of '+db.mistakes.length+' logged')}</div><div class="grid cols"><div class="card">${heading('Subject revision progress')} ${subjects.map(s=>{let cs=db.chapters.filter(c=>c.subject===s),n=cs.length*4,d=cs.reduce((a,c)=>a+c.revisions.filter(r=>r.done).length,0);return `<div class="subjectrow"><div class="rowtop"><b>${s}</b><span>${pct(d,n)}%</span></div><div class="progress"><span style="width:${pct(d,n)}%"></span></div></div>`}).join('')}</div><div class="card">${heading('Focused hours · last 7 days')}<div class="chartbars">${days.map(d=>{let h=dayHours(d);return `<div class="barwrap"><div class="bar" style="height:${Math.max(2,h/Math.max(1,...days.map(dayHours))*110)}px"></div>${new Date(d+'T00:00:00').toLocaleDateString('en-IN',{weekday:'short'})}<br>${hours(h)}h</div>`}).join('')}</div></div></div><div class="card" style="margin-top:15px">${heading('Subject focus distribution')}<div class="grid" style="grid-template-columns:repeat(4,1fr)">${subjects.map(s=>{let h=subjectProgress(s).hours;return `<div><div class="statnum">${hours(h)}h</div><div class="muted small">${s}</div></div>`}).join('')}</div></div>`}
+function calendar(){let month=calMonth,y=month.getFullYear(),m=month.getMonth(),first=new Date(y,m,1).getDay(),count=new Date(y,m+1,0).getDate();return `${heading('Calendar','Monthly overview of scheduled study tasks')}<div class="toolbar"><button class="btn secondary" onclick="changeMonth(-1)">← Previous</button><b style="padding:9px">${month.toLocaleDateString('en-IN',{month:'long',year:'numeric'})}</b><button class="btn secondary" onclick="changeMonth(1)">Next →</button></div><div class="calendargrid">${['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(x=>`<div class="muted small" style="text-align:center">${x}</div>`).join('')}${Array(first).fill('<div></div>').join('')}${Array.from({length:count},(_,i)=>{let d=`${y}-${String(m+1).padStart(2,'0')}-${String(i+1).padStart(2,'0')}`,ts=db.tasks.filter(t=>t.date===d);return `<div class="calday" onclick="quickTask('${d}')"><b>${i+1}</b>${ts.slice(0,2).map(t=>`<div style="margin-top:5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><i class="dot"></i>${esc(t.title)}</div>`).join('')}${ts.length>2?`<div class="muted">+${ts.length-2} more</div>`:''}</div>`}).join('')}</div><p class="muted small">Tap a date to add a task. Use the planner to edit or reschedule existing tasks.</p>`}
+function journal(){let j=db.journals.find(x=>x.date===dateStr())||{};return `${heading('Daily journal','A short debrief makes tomorrow easier to plan')}<div class="card"><form id="journalForm" class="formgrid"><div class="wide"><label>Today’s achievements</label><textarea class="field" name="achievements" rows="2">${esc(j.achievements||'')}</textarea></div><div class="wide"><label>What I studied</label><textarea class="field" name="studied" rows="2">${esc(j.studied||'')}</textarea></div><div class="wide"><label>Difficulties faced</label><textarea class="field" name="difficulties" rows="2">${esc(j.difficulties||'')}</textarea></div><div><label>Mood rating (1-5)</label><input class="field" name="mood" type="number" min="1" max="5" value="${j.mood||3}"></div><div><label>Energy level (1-5)</label><input class="field" name="energy" type="number" min="1" max="5" value="${j.energy||3}"></div><div><label>Sleep duration (hours)</label><input class="field" name="sleep" type="number" min="0" step=".5" value="${j.sleep||''}"></div><div class="wide"><label>Distractions</label><textarea class="field" name="distractions" rows="2">${esc(j.distractions||'')}</textarea></div><div class="wide"><label>Tomorrow’s priorities</label><textarea class="field" name="priorities" rows="2">${esc(j.priorities||'')}</textarea></div><div class="wide"><button class="btn">Save today’s journal</button></div></form></div><div class="card" style="margin-top:15px"><label class="muted small">Weekly reflection</label><textarea id="weeklyNotes" class="field" rows="4" style="width:100%;margin-top:7px" placeholder="What worked this week? What needs to change?">${esc(db.weeklyNotes)}</textarea><button class="btn secondary" style="margin-top:8px" onclick="db.weeklyNotes=$('#weeklyNotes').value;save();toast('Reflection saved')">Save reflection</button></div>`}
+function exam(){let days=Math.max(0,Math.ceil((new Date(db.targets.exam+'T00:00:00')-new Date())/86400000)),remaining=db.chapters.filter(c=>!c.revisions.every(r=>r.done));return `${heading('Examination mode','A clear-eyed view of the remaining runway')}<div class="grid stats">${stat('Days remaining',days,'Exam date: '+db.targets.exam)}${stat('Chapters not through all 4 cycles',remaining.length,'Chapter-level revision flags')}${stat('Open practice records',db.practice.filter(x=>x.status!=='Completed').length,'RTP + MTP + PYQ')}${stat('Open mistakes',db.mistakes.filter(x=>x.status==='Open').length,'Resolve before exam day')}</div><div class="grid cols"><div class="card">${heading('Weak chapters','Confidence rating of 1 is weakest')} ${db.chapters.filter(c=>c.confidence>0).sort((a,b)=>a.confidence-b.confidence).slice(0,10).map(c=>`<div class="subjectrow"><b>${esc(c.name)}</b><span class="muted small" style="float:right">${c.subject} · ${c.confidence}/5</span></div>`).join('')||'<div class="empty">Add confidence ratings in the chapter tracker to surface weak areas.</div>'}</div><div class="card">${heading('Final sprint checklists')} ${[30,15,7].map(n=>`<details style="padding:10px 0;border-bottom:1px solid var(--line)"><summary><b>Final ${n} days</b></summary><div class="checklist">${['Review high-priority chapters','Complete planned RTP questions','Complete planned MTP papers','Attempt timed PYQs','Review mistake book','Confirm exam-day logistics'].map((x,i)=>`<label><input type="checkbox" data-check="sprint${n}_${i}"> ${x}</label>`).join('')}</div></details>`).join('')}</div></div>`}
+function subjectsPage(){return `${heading('Subject management','Independent progress and lecture/revision workload')}<div class="grid cols">${subjects.map(s=>{let x=subjectProgress(s);return `<div class="card"><div class="eyebrow">${s}</div><h2 style="margin:5px 0">${full[s]}</h2><div class="statnum">${x.p}%</div><div class="progress"><span style="width:${x.p}%"></span></div><div class="grid" style="grid-template-columns:1fr 1fr;margin-top:14px"><div><b>${x.chapters}</b><div class="muted small">Chapters</div></div><div><b>${hours(x.hours)}h</b><div class="muted small">Focused time</div></div><div><b>${hours(x.lect)}h</b><div class="muted small">Lectures done</div></div><div><b>${hours(Math.max(0,x.total-x.lect))}h</b><div class="muted small">Lectures pending</div></div></div><button class="btn secondary" style="margin-top:15px" onclick="setPage('chapters');$('#chSub').value='${s}';renderChapterRows()">Open chapters →</button></div>`}).join('')}</div>`}
+function settings(){return `${heading('Settings & data','Tune your targets and protect your preparation records')}<div class="grid cols"><div class="card"><h2>Appearance</h2><p class="muted small">Choose the look of your study command centre. Your preference is saved on this device.</p><div class="subjectrow"><b>Current theme</b><span class="pill">${db.settings.theme==='dark'?'Dark mode':'Light mode'}</span></div><button class="btn" type="button" onclick="toggleTheme()">${db.settings.theme==='dark'?'☀ Switch to light mode':'☾ Switch to dark mode'}</button></div><div class="card"><h2>Study targets</h2><form id="targetForm" class="formgrid"><div><label>Daily hours</label><input class="field" name="daily" type="number" step=".5" min="0" value="${db.targets.daily}"></div><div><label>Weekly hours</label><input class="field" name="weekly" type="number" step=".5" min="0" value="${db.targets.weekly}"></div><div><label>Monthly hours</label><input class="field" name="monthly" type="number" step=".5" min="0" value="${db.targets.monthly}"></div><div><label>Daily Pomodoro target</label><input class="field" name="pomodoro" type="number" min="0" value="${db.targets.pomodoro}"></div><div><label>Exam date</label><input class="field" name="exam" type="date" value="${db.targets.exam}"></div><div class="wide"><button class="btn">Save targets</button></div></form></div><div class="card"><h2>Backup & restore</h2><p class="muted small">Your data autosaves in this browser on this device. Export a backup regularly, especially before clearing browser data.</p><button class="btn" onclick="exportJSON()">Download full backup (JSON)</button> <button class="btn secondary" onclick="document.querySelector('#restoreFile').click()">Restore backup</button><input id="restoreFile" type="file" accept=".json,application/json" class="hidden" onchange="restoreJSON(this.files[0])"><hr style="border:0;border-top:1px solid var(--line);margin:18px 0"><button class="btn secondary" onclick="exportCSV()">Export records as CSV</button><p class="muted small">Excel can open the CSV export. JSON preserves all linked records and settings.</p></div></div><div class="card" style="margin-top:15px"><h2>Storage status</h2><div class="small muted">Autosave: active · Local browser storage · Schema: v1</div><div class="small muted" style="margin-top:7px">For syncing between iPad, iPhone and desktop, this single-file edition needs a cloud database and sign-in layer. Keep JSON backups when switching devices.</div><button class="btn danger" style="margin-top:14px" onclick="if(confirm('Delete ALL study data from this browser? Export a backup first.')){localStorage.removeItem('cainter_command_v1');location.reload()}">Reset all data</button></div>`}
+function updateHeroCountdown(){const el=$('#heroCountdownDays'),dateEl=$('#heroCountdownDate');if(!el)return;const target=new Date((db.targets.exam||'2027-01-08')+'T00:00:00');const now=new Date();const days=Math.max(0,Math.ceil((target-now)/86400000));el.textContent=days; if(dateEl)dateEl.textContent='Target: '+target.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'});}
+function render(){let map={dashboard,planner,subjects:subjectsPage,chapters:chaptersPage,lectures,revision1:()=>revisionPage(1),revision2:()=>revisionPage(2),revision3:()=>revisionPage(3),rtp:()=>practicePage('rtp'),mtp:()=>practicePage('mtp'),pyq:()=>practicePage('pyq'),focus,mocks,mistakes,analytics,calendar,journal,exam,settings};$('#view').innerHTML=(map[page]||dashboard)();updateHeroCountdown();if(page==='chapters')renderChapterRows();if(page==='planner')renderPlanner();if(['rtp','mtp','pyq'].includes(page))bindPracticeFilters();if(page==='journal')$('#journalForm').onsubmit=saveJournal;if(page==='settings')$('#targetForm').onsubmit=saveTargets;if(page==='focus'){refreshTimerUI();if(timer.subject)$('#fSub').value=timer.subject;refreshChapters()}}
+function bindPracticeFilters(){let a=()=>{let sub=$('#prSub').value,st=$('#prStatus').value;document.querySelectorAll('#practiceRows tr[data-sub]').forEach(r=>r.classList.toggle('hidden',(sub&&r.dataset.sub!==sub)||(st&&r.dataset.status!==st)))};$('#prSub').onchange=a;$('#prStatus').onchange=a}
+function modal(title,body,fn){$('#modalTitle').textContent=title;$('#modalBody').innerHTML=body;$('#modalSave').onclick=()=>{if(fn())closeModal()};$('#modalback').style.display='flex'}
+function closeModal(){$('#modalback').style.display='none'}
+function val(n){return document.querySelector(`[name="${n}"]`)?.value||''}
+function openTask(t){t=t?db.tasks.find(x=>x.id===t):{};modal(t.id?'Edit study task':'Add study task',`<div class="formgrid"><div class="wide"><label>Task title</label><input class="field" name="title" required value="${esc(t.title||'')}"></div><div><label>Subject</label><select class="field" name="subject">${subjects.map(s=>`<option ${t.subject===s?'selected':''}>${s}</option>`).join('')}</select></div><div><label>Chapter</label><select class="field" name="chapterId"><option value="">Subject level</option>${db.chapters.map(c=>`<option value="${c.id}" ${t.chapterId===c.id?'selected':''}>${c.subject} · ${esc(c.name)}</option>`).join('')}</select></div><div><label>Revision</label><select class="field" name="revision"><option value="">Not specified</option>${[1,2,3,4].map(n=>`<option ${t.revision==n?'selected':''}>${n}</option>`).join('')}</select></div><div><label>Activity</label><select class="field" name="activity">${['Lectures','Reading','Conceptual study','Question practice','RTP','MTP','PYQ','Formula revision','Mock test'].map(x=>`<option ${t.activity===x?'selected':''}>${x}</option>`).join('')}</select></div><div><label>Date</label><input class="field" type="date" name="date" value="${t.date||dateStr()}"></div><div><label>Planned hours</label><input class="field" type="number" min="0" step=".25" name="hours" value="${t.hours||1}"></div><div><label>Actual hours</label><input class="field" type="number" min="0" step=".25" name="actual" value="${t.actual||0}"></div><div><label>Priority</label><select class="field" name="priority">${['High','Normal','Low'].map(x=>`<option ${t.priority===x?'selected':''}>${x}</option>`).join('')}</select></div><div><label>Status</label><select class="field" name="status">${['Pending','Partial','Completed'].map(x=>`<option ${t.status===x?'selected':''}>${x}</option>`).join('')}</select></div></div>`,()=>{let x={id:t.id||id(),title:val('title'),subject:val('subject'),chapterId:val('chapterId'),revision:val('revision'),activity:val('activity'),date:val('date'),hours:+val('hours'),actual:+val('actual'),priority:val('priority'),status:val('status')};if(!x.title)return false;if(t.id)Object.assign(t,x);else db.tasks.push(x);save();render();return true})}
+function editTask(id){openTask(id)}
+function toggleTask(id){
+  let t=db.tasks.find(x=>x.id===id);
+  if(!t)return;
+  const wasCompleted = t.status==='Completed';
+  t.status = wasCompleted ? 'Pending' : 'Completed';
+  if(!wasCompleted && t.status==='Completed' && t.chapterId && !t.autoGenerated){
+    const day3 = addDays(dateStr(), 3);
+    const key = `day3-revise-${t.chapterId}-${dateStr()}`;
+    const existing = db.tasks.find(x => x.autoKey === key);
+    if(!existing){
+      const ch = db.chapters.find(c => c.id === t.chapterId);
+      db.tasks.push({
+        id: id(),
+        autoKey: key,
+        title: `📌 Day 3 Revision · ${ch ? ch.name : t.title}`,
+        subject: t.subject || (ch && ch.subject) || '',
+        chapterId: t.chapterId,
+        revision: t.revision || '',
+        activity: 'Revision',
+        date: day3,
+        hours: 0.5,
+        actual: 0,
+        priority: 'High',
+        status: 'Pending',
+        autoGenerated: true,
+        sourceTaskId: t.id
+      });
+      toast('Day 3 revision reminder added to your planner');
+    }
+  }
+  if(wasCompleted && t.status==='Pending'){
+    db.tasks.forEach(x => {
+      if(x.sourceTaskId === t.id && x.status !== 'Completed') x.status = 'Cancelled';
+    });
+  }
+  save();
+  render();
+}
+function updateTask(id,k,v){let t=db.tasks.find(x=>x.id===id);t[k]=v;save();render()}
+function addDays(date,days){let d=new Date(date+'T12:00:00');d.setDate(d.getDate()+days);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
+function toggleWritingPractice(cid,checked){
+ let c=db.chapters.find(x=>x.id===cid);if(!c)return;
+ if(!['Costing','FM'].includes(c.subject))return;
+ c.writingPracticeDone=checked;
+ c.writingPracticeDate=checked?dateStr():null;
+ c.writingPracticeReminderIds=c.writingPracticeReminderIds||[];
+ if(checked){
+  [1,3].forEach(day=>{
+   const key=`writing-${cid}-${c.writingPracticeDate}-day${day}`;
+   const existing=db.tasks.find(t=>t.autoKey===key);
+   if(existing){existing.status='Pending';existing.date=addDays(c.writingPracticeDate,day);}
+   else{
+    const task={id:id(),autoKey:key,title:`📌 Day ${day} Writing Practice Repeat · ${c.name}`,subject:c.subject,chapterId:cid,revision:'',activity:'Writing practice',date:addDays(c.writingPracticeDate,day),hours:0.5,actual:0,priority:'High',status:'Pending',autoGenerated:true};
+    db.tasks.push(task);c.writingPracticeReminderIds.push(task.id);
+   }
+  });
+  toast('Writing practice done. Day 1 + Day 3 revision reminders added to your planner.');
+ }else{
+  db.tasks.forEach(t=>{if(c.writingPracticeReminderIds.includes(t.id)&&t.status!=='Completed')t.status='Cancelled'});
+  toast('Writing practice unticked. Unfinished reminders cancelled.');
+ }
+ save();render();
+}time</div></div><div><b>${hours(x.lect)}h</b><div class="muted small">Lectures done</div></div><div><b>${hours(Math.max(0,x.total-x.lect))}h</b><div class="muted small">Lectures pending</div></div></div><button class="btn secondary" style="margin-top:15px" onclick="setPage('chapters');$('#chSub').value='${s}';renderChapterRows()">Open chapters →</button></div>`}).join('')}</div>`}
+function settings(){return `${heading('Settings & data','Tune your targets and protect your preparation records')}<div class="grid cols"><div class="card"><h2>Appearance</h2><p class="muted small">Choose the look of your study command centre. Your preference is saved on this device.</p><div class="subjectrow"><b>Current theme</b><span class="pill">${db.settings.theme==='dark'?'Dark mode':'Light mode'}</span></div><button class="btn" type="button" onclick="toggleTheme()">${db.settings.theme==='dark'?'☀ Switch to light mode':'☾ Switch to dark mode'}</button></div><div class="card"><h2>Study targets</h2><form id="targetForm" class="formgrid"><div><label>Daily hours</label><input class="field" name="daily" type="number" step=".5" min="0" value="${db.targets.daily}"></div><div><label>Weekly hours</label><input class="field" name="weekly" type="number" step=".5" min="0" value="${db.targets.weekly}"></div><div><label>Monthly hours</label><input class="field" name="monthly" type="number" step=".5" min="0" value="${db.targets.monthly}"></div><div><label>Daily Pomodoro target</label><input class="field" name="pomodoro" type="number" min="0" value="${db.targets.pomodoro}"></div><div><label>Exam date</label><input class="field" name="exam" type="date" value="${db.targets.exam}"></div><div class="wide"><button class="btn">Save targets</button></div></form></div><div class="card"><h2>Backup & restore</h2><p class="muted small">Your data autosaves in this browser on this device. Export a backup regularly, especially before clearing browser data.</p><button class="btn" onclick="exportJSON()">Download full backup (JSON)</button> <button class="btn secondary" onclick="document.querySelector('#restoreFile').click()">Restore backup</button><input id="restoreFile" type="file" accept=".json,application/json" class="hidden" onchange="restoreJSON(this.files[0])"><hr style="border:0;border-top:1px solid var(--line);margin:18px 0"><button class="btn secondary" onclick="exportCSV()">Export records as CSV</button><p class="muted small">Excel can open the CSV export. JSON preserves all linked records and settings.</p></div></div><div class="card" style="margin-top:15px"><h2>Storage status</h2><div class="small muted">Autosave: active · Local browser storage · Schema: v1</div><div class="small muted" style="margin-top:7px">For syncing between iPad, iPhone and desktop, this single-file edition needs a cloud database and sign-in layer. Keep JSON backups when switching devices.</div><button class="btn danger" style="margin-top:14px" onclick="if(confirm('Delete ALL study data from this browser? Export a backup first.')){localStorage.removeItem('cainter_command_v1');location.reload()}">Reset all data</button></div>`}
+function updateHeroCountdown(){const el=$('#heroCountdownDays'),dateEl=$('#heroCountdownDate');if(!el)return;const target=new Date((db.targets.exam||'2027-01-08')+'T00:00:00');const now=new Date();const days=Math.max(0,Math.ceil((target-now)/86400000));el.textContent=days; if(dateEl)dateEl.textContent='Target: '+target.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'});}
+function render(){let map={dashboard,planner,subjects:subjectsPage,chapters:chaptersPage,lectures,revision1:()=>revisionPage(1),revision2:()=>revisionPage(2),revision3:()=>revisionPage(3),rtp:()=>practicePage('rtp'),mtp:()=>practicePage('mtp'),pyq:()=>practicePage('pyq'),focus,mocks,mistakes,analytics,calendar,journal,exam,settings};$('#view').innerHTML=(map[page]||dashboard)();updateHeroCountdown();if(page==='chapters')renderChapterRows();if(page==='planner')renderPlanner();if(['rtp','mtp','pyq'].includes(page))bindPracticeFilters();if(page==='journal')$('#journalForm').onsubmit=saveJournal;if(page==='settings')$('#targetForm').onsubmit=saveTargets;if(page==='focus'){refreshTimerUI();if(timer.subject)$('#fSub').value=timer.subject;refreshChapters()}}
+function bindPracticeFilters(){let a=()=>{let sub=$('#prSub').value,st=$('#prStatus').value;document.querySelectorAll('#practiceRows tr[data-sub]').forEach(r=>r.classList.toggle('hidden',(sub&&r.dataset.sub!==sub)||(st&&r.dataset.status!==st)))};$('#prSub').onchange=a;$('#prStatus').onchange=a}
+function modal(title,body,fn){$('#modalTitle').textContent=title;$('#modalBody').innerHTML=body;$('#modalSave').onclick=()=>{if(fn())closeModal()};$('#modalback').style.display='flex'}
+function closeModal(){$('#modalback').style.display='none'}
+function val(n){return document.querySelector(`[name="${n}"]`)?.value||''}
+function openTask(t){t=t?db.tasks.find(x=>x.id===t):{};modal(t.id?'Edit study task':'Add study task',`<div class="formgrid"><div class="wide"><label>Task title</label><input class="field" name="title" required value="${esc(t.title||'')}"></div><div><label>Subject</label><select class="field" name="subject">${subjects.map(s=>`<option ${t.subject===s?'selected':''}>${s}</option>`).join('')}</select></div><div><label>Chapter</label><select class="field" name="chapterId"><option value="">Subject level</option>${db.chapters.map(c=>`<option value="${c.id}" ${t.chapterId===c.id?'selected':''}>${c.subject} · ${esc(c.name)}</option>`).join('')}</select></div><div><label>Revision</label><select class="field" name="revision"><option value="">Not specified</option>${[1,2,3,4].map(n=>`<option ${t.revision==n?'selected':''}>${n}</option>`).join('')}</select></div><div><label>Activity</label><select class="field" name="activity">${['Lectures','Reading','Conceptual study','Question practice','RTP','MTP','PYQ','Formula revision','Mock test'].map(x=>`<option ${t.activity===x?'selected':''}>${x}</option>`).join('')}</select></div><div><label>Date</label><input class="field" type="date" name="date" value="${t.date||dateStr()}"></div><div><label>Planned hours</label><input class="field" type="number" min="0" step=".25" name="hours" value="${t.hours||1}"></div><div><label>Actual hours</label><input class="field" type="number" min="0" step=".25" name="actual" value="${t.actual||0}"></div><div><label>Priority</label><select class="field" name="priority">${['High','Normal','Low'].map(x=>`<option ${t.priority===x?'selected':''}>${x}</option>`).join('')}</select></div><div><label>Status</label><select class="field" name="status">${['Pending','Partial','Completed'].map(x=>`<option ${t.status===x?'selected':''}>${x}</option>`).join('')}</select></div></div>`,()=>{let x={id:t.id||id(),title:val('title'),subject:val('subject'),chapterId:val('chapterId'),revision:val('revision'),activity:val('activity'),date:val('date'),hours:+val('hours'),actual:+val('actual'),priority:val('priority'),status:val('status')};if(!x.title)return false;if(t.id)Object.assign(t,x);else db.tasks.push(x);save();render();return true})}
+function editTask(id){openTask(id)}
+function toggleTask(id){
+  let t=db.tasks.find(x=>x.id===id);
+  if(!t)return;
+  const wasCompleted = t.status==='Completed';
+  t.status = wasCompleted ? 'Pending' : 'Completed';
+  if(!wasCompleted && t.status==='Completed' && t.chapterId && !t.autoGenerated){
+    const day3 = addDays(dateStr(), 3);
+    const key = `day3-revise-${t.chapterId}-${dateStr()}`;
+    const existing = db.tasks.find(x => x.autoKey === key);
+    if(!existing){
+      const ch = db.chapters.find(c => c.id === t.chapterId);
+      db.tasks.push({
+        id: id(),
+        autoKey: key,
+        title: `📌 Day 3 Revision · ${ch ? ch.name : t.title}`,
+        subject: t.subject || (ch && ch.subject) || '',
+        chapterId: t.chapterId,
+        revision: t.revision || '',
+        activity: 'Revision',
+        date: day3,
+        hours: 0.5,
+        actual: 0,
+        priority: 'High',
+        status: 'Pending',
+        autoGenerated: true,
+        sourceTaskId: t.id
+      });
+      toast('Day 3 revision reminder added to your planner');
+    }
+  }
+  if(wasCompleted && t.status==='Pending'){
+    db.tasks.forEach(x => {
+      if(x.sourceTaskId === t.id && x.status !== 'Completed') x.status = 'Cancelled';
+    });
+  }
+  save();
+  render();
+}
+function updateTask(id,k,v){let t=db.tasks.find(x=>x.id===id);t[k]=v;save();render()}
+function addDays(date,days){let d=new Date(date+'T12:00:00');d.setDate(d.getDate()+days);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
+function toggleWritingPractice(cid,checked){
+ let c=db.chapters.find(x=>x.id===cid);if(!c)return;
+ if(!['Costing','FM'].includes(c.subject))return;
+ c.writingPracticeDone=checked;
+ c.writingPracticeDate=checked?dateStr():null;
+ c.writingPracticeReminderIds=c.writingPracticeReminderIds||[];
+ if(checked){
+  [1,3].forEach(day=>{
+   const key=`writing-${cid}-${c.writingPracticeDate}-day${day}`;
+   const existing=db.tasks.find(t=>t.autoKey===key);
+   if(existing){existing.status='Pending';existing.date=addDays(c.writingPracticeDate,day);}
+   else{
+    const task={id:id(),autoKey:key,title:`📌 Day ${day} Writing Practice Repeat · ${c.name}`,subject:c.subject,chapterId:cid,revision:'',activity:'Writing practice',date:addDays(c.writingPracticeDate,day),hours:0.5,actual:0,priority:'High',status:'Pending',autoGenerated:true};
+    db.tasks.push(task);c.writingPracticeReminderIds.push(task.id);
+   }
+  });
+  toast('Writing practice done. Day 1 + Day 3 revision reminders added to your planner.');
+ }else{
+  db.tasks.forEach(t=>{if(c.writingPracticeReminderIds.includes(t.id)&&t.status!=='Completed')t.status='Cancelled'});
+  toast('Writing practice unticked. Unfinished reminders cancelled.');
+ }
+ save();render();
+}
+function openChapter(cid){let c=cid?db.chapters.find(x=>x.id===cid):{};modal(c.id?'Edit chapter':'Add chapter',`<div class="formgrid"><div><label>Subject</label><select class="field" name="subject">${subjects.map(s=>`<option ${c.subject===s?'selected':''}>${s}</option>`).join('')}</select></div><div class="wide"><label>Chapter name</label><input class="field" name="name" required value="${esc(c.name||'')}"></div><div><label>Total lecture hours</label><input class="field" type="number" min="0" step=".5" name="lectureTotal" value="${c.lectureTotal||0}"></div><div><label>Completed lecture hours</label><input class="field" type="number" min="0" step=".25" name="lectureDone" value="${c.lectureDone||0}"></div><div><label>Difficulty</label><select class="field" name="difficulty">${['Easy','Medium','Hard'].map(x=>`<option ${c.difficulty===x?'selected':''}>${x}</option>`)}</select></div><div><label>Priority</label><select class="field" name="priority">${['High','Normal','Low'].map(x=>`<option ${c.priority===x?'selected':''}>${x}</option>`)}</select></div><div><label>Confidence (1-5)</label><input class="field" type="number" min="0" max="5" name="confidence" value="${c.confidence||0}"></div><div><label>Chapter test marks</label><input class="field" name="testMarks" value="${esc(c.testMarks||'')}" placeholder="e.g. 32/40"></div><div class="wide"><label>Notes</label><textarea class="field" name="notes">${esc(c.notes||'')}</textarea></div></div>`,()=>{let x={id:c.id||id(),subject:val('subject'),name:val('name'),lectureTotal:+val('lectureTotal'),lectureDone:+val('lectureDone'),difficulty:val('difficulty'),priority:val('priority'),confidence:+val('confidence'),testMarks:val('testMarks'),notes:val('notes'),revisions:c.revisions||[{}, {}, {}, {}],focused:c.focused||0};if(!x.name)return false;if(c.id)Object.assign(c,x);else db.chapters.push(x);save();render();return true})}
+function revisionToggle(cid,i){let c=db.chapters.find(x=>x.id===cid);c.revisions[i]??={};c.revisions[i].done=!c.revisions[i].done;if(c.revisions[i].done&&!c.revisions[i].date)c.revisions[i].date=dateStr();save();render()}
+function setRev(cid,i,k,v){let c=db.chapters.find(x=>x.id===cid);c.revisions[i]??={};c.revisions[i][k]=k==='hours'||k==='confidence'?Number(v):v;save()}
+function lectureSet(cid,k,v){let c=db.chapters.find(x=>x.id===cid);c[k]=Math.max(0,Number(v));save();render()}
+function openPractice(type,pid){let p=pid?db.practice.find(x=>x.id===pid):{};modal((p.id?'Edit ':'Add ')+type.toUpperCase()+' record',`<div class="formgrid"><div><label>Subject</label><select class="field" name="subject">${subjects.map(s=>`<option ${p.subject===s?'selected':''}>${s}</option>`).join('')}</select></div><div class="wide"><label>Chapter</label><select class="field" name="chapterId">${db.chapters.map(c=>`<option value="${c.id}" ${p.chapterId===c.id?'selected':''}>${c.subject} · ${esc(c.name)}</option>`).join('')}</select></div><div><label>Reference / paper name</label><input class="field" name="reference" value="${esc(p.reference||'')}"></div><div><label>Year / Series</label><input class="field" name="year" value="${esc(p.year||'')}" placeholder="${type==='mtp'?'Series I / II':'e.g. 2025'}"></div><div><label>Attempt / exam</label><input class="field" name="attempt" value="${esc(p.attempt||'')}"></div><div><label>Question number(s)</label><input class="field" name="question" value="${esc(p.question||'')}"></div><div><label>Total questions</label><input class="field" type="number" name="total" min="0" value="${p.total||0}"></div><div><label>Attempted</label><input class="field" type="number" name="attempted" min="0" value="${p.attempted||0}"></div><div><label>Marks obtained</label><input class="field" type="number" name="marks" value="${p.marks??''}"></div><div><label>Maximum marks</label><input class="field" type="number" name="max" value="${p.max??''}"></div><div><label>Date completed / attempted</label><input class="field" type="date" name="date" value="${p.date||dateStr()}"></div><div><label>Difficulty</label><select class="field" name="difficulty">${['Easy','Medium','Hard'].map(x=>`<option ${p.difficulty===x?'selected':''}>${x}</option>`)}</select></div><div><label>Status</label><select class="field" name="status">${['Pending','In progress','Completed'].map(x=>`<option ${p.status===x?'selected':''}>${x}</option>`)}</select></div><div class="wide"><label>Mistakes / notes</label><textarea class="field" name="notes">${esc(p.notes||'')}</textarea></div></div>`,()=>{let x={id:p.id||id(),type,subject:val('subject'),chapterId:val('chapterId'),reference:val('reference'),year:val('year'),attempt:val('attempt'),question:val('question'),total:+val('total'),attempted:+val('attempted'),marks:val('marks')===''?null:+val('marks'),max:val('max')===''?null:+val('max'),date:val('date'),difficulty:val('difficulty'),status:val('status'),notes:val('notes')};if(p.id)Object.assign(p,x);else db.practice.push(x);save();render();return true})}
+function editPractice(id){let p=db.practice.find(x=>x.id===id);openPractice(p.type,id)}function updatePractice(id,k,v){db.practice.find(x=>x.id===id)[k]=v;save();render()}
+function openMock(){modal('Add mock test',`<div class="formgrid"><div class="wide"><label>Test name / number</label><input class="field" name="name" required placeholder="Mock Test 1"></div><div><label>Subject</label><select class="field" name="subject">${subjects.map(s=>`<option>${s}</option>`).join('')}</select></div><div><label>Date</label><input class="field" type="date" name="date" value="${dateStr()}"></div><div><label>Marks obtained</label><input class="field" type="number" name="marks"></div><div><label>Maximum marks</label><input class="field" type="number" name="max" value="100"></div><div><label>Time taken</label><input class="field" name="time" placeholder="3h"></div><div class="wide"><label>Weak chapters</label><input class="field" name="weak"></div><div class="wide"><label>Mistakes / observations</label><textarea class="field" name="mistakes"></textarea></div></div>`,()=>{db.mocks.push({id:id(),name:val('name'),subject:val('subject'),date:val('date'),marks:+val('marks'),max:+val('max'),time:val('time'),weak:val('weak'),mistakes:val('mistakes')});save();render();return true})}
+function openMistake(){modal('Log a mistake',`<div class="formgrid"><div><label>Subject</label><select class="field" name="subject">${subjects.map(s=>`<option>${s}</option>`).join('')}</select></div><div class="wide"><label>Chapter</label><select class="field" name="chapterId">${db.chapters.map(c=>`<option value="${c.id}">${c.subject} · ${esc(c.name)}</option>`).join('')}</select></div><div><label>Category</label><select class="field" name="category">${['Conceptual mistake','Calculation error','Forgotten formula','Forgotten provision / keyword','Presentation mistake','Time management','Silly mistake'].map(x=>`<option>${x}</option>`)}</select></div><div><label>Question reference</label><input class="field" name="ref"></div><div><label>Date</label><input class="field" name="date" type="date" value="${dateStr()}"></div><div><label>Times repeated</label><input class="field" name="repeats" type="number" min="1" value="1"></div><div class="wide"><label>Mistake description</label><textarea class="field" name="description" required></textarea></div></div>`,()=>{db.mistakes.push({id:id(),subject:val('subject'),chapterId:val('chapterId'),category:val('category'),ref:val('ref'),date:val('date'),repeats:+val('repeats'),description:val('description'),status:'Open'});save();render();return true})}
+function updateMistake(id,v){db.mistakes.find(x=>x.id===id).status=v;save();render()}
+function del(k,idv){if(!confirm('Delete this record? This cannot be undone.'))return;db[k]=db[k].filter(x=>x.id!==idv);save();render()}
+function saveJournal(e){e.preventDefault();let f=new FormData(e.target),j={date:dateStr()};for(let [k,v] of f)j[k]=v;let i=db.journals.findIndex(x=>x.date===j.date);if(i>=0)db.journals[i]=j;else db.journals.push(j);save();toast('Journal saved');return false}
+function saveTargets(e){e.preventDefault();let f=new FormData(e.target);for(let [k,v] of f)db.targets[k]=k==='exam'?v:Number(v);save();toast('Targets updated');render();return false}
+function exportJSON(){download('ca-inter-command-backup-'+dateStr()+'.json',JSON.stringify(db,null,2),'application/json')}
+function restoreJSON(file){if(!file)return;let r=new FileReader();r.onload=()=>{try{let x=JSON.parse(r.result);if(!x.chapters||!x.targets)throw 0;if(confirm('Replace current data with this backup?')){db=x;save();render();toast('Backup restored')}}catch(e){alert('This backup file is invalid.')}};r.readAsText(file)}
+function exportCSV(){let rows=[['record_type','id','subject','chapter','date','status','details']];db.tasks.forEach(x=>rows.push(['task',x.id,x.subject,x.chapterId,x.date,x.status,JSON.stringify(x)]));db.practice.forEach(x=>rows.push([x.type,x.id,x.subject,x.chapterId,x.date,x.status,JSON.stringify(x)]));db.sessions.forEach(x=>rows.push(['focus',x.id,x.subject,x.chapter,x.date,x.status,JSON.stringify(x)]));db.mocks.forEach(x=>rows.push(['mock',x.id,x.subject,'',x.date,'',JSON.stringify(x)]));let csv=rows.map(r=>r.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\n');download('ca-inter-records-'+dateStr()+'.csv',csv,'text/csv')}
+function download(name,data,type){let a=document.createElement('a'),u=URL.createObjectURL(new Blob([data],{type}));a.href=u;a.download=name;a.click();URL.revokeObjectURL(u)}
+function quickTask(d){openTask();setTimeout(()=>{let x=document.querySelector('[name="date"]');if(x)x.value=d},0)}
+let calMonth=new Date();function changeMonth(n){calMonth.setMonth(calMonth.getMonth()+n);render()}
+function toast(s){let t=document.createElement('div');t.textContent=s;t.style='position:fixed;bottom:20px;right:20px;background:#17243a;color:white;padding:12px 18px;border-radius:10px;z-index:50;box-shadow:0 8px 30px #0003';document.body.append(t);setTimeout(()=>t.remove(),2200)}
+function refreshChapters(){let s=$('#fSub')?.value||timer.subject;if($('#fChapter')){$('#fChapter').innerHTML=chapterOptions(s);timer.chapter=$('#fChapter').value}}
+function preset(a,b){if(timer.running)return toast('Pause or stop the current session first.');timer.study=a;timer.brk=b;timer.mode='study';timer.remaining=a*60;timer.total=a*60;refreshTimerUI()}
+function customPreset(){let a=prompt('Study duration in minutes',timer.study);if(a===null)return;let b=prompt('Break duration in minutes',timer.brk);if(b===null)return;if(+a<1||+b<0)return alert('Enter valid durations.');preset(+a,+b)}
+function refreshTimerUI(){let m=Math.floor(timer.remaining/60),s=timer.remaining%60;if($('#timerDisplay'))$('#timerDisplay').textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');if($('#timerMode'))$('#timerMode').textContent=timer.mode==='study'?'STUDY SESSION':'BREAK';if($('#timerToggle'))$('#timerToggle').textContent=timer.running?'Pause':timer.paused?'Resume':'Start'}
+function toggleTimer(){if(timer.running){clearInterval(timer.interval);timer.running=false;timer.paused=true;refreshTimerUI();return}if(!timer.sessionId&&timer.mode==='study'){timer.sessionId=id();timer.started=new Date().toISOString();timer.elapsed=0}timer.running=true;timer.paused=false;timer.lastTick=Date.now();timer.interval=setInterval(()=>{let now=Date.now();let delta=Math.floor((now-timer.lastTick)/1000);if(delta>0){timer.remaining-=delta;if(timer.mode==='study')timer.elapsed=(timer.elapsed||0)+delta;timer.lastTick=now}if(timer.remaining<=0){timer.remaining=0;finishPhase()}refreshTimerUI()},250);refreshTimerUI()}
+function finishPhase(){clearInterval(timer.interval);timer.running=false;if(timer.mode==='study'){saveSession('Completed',Math.round((timer.elapsed||0)/60));timer.mode='break';timer.remaining=timer.brk*60;timer.total=timer.remaining;timer.sessionId=null;timer.elapsed=0;toast('Focus block complete. Break time.')}else{timer.mode='study';timer.remaining=timer.study*60;timer.total=timer.remaining;toast('Break complete. Ready for another focus block?')}timer.paused=false;refreshTimerUI()}
+function saveSession(status,minutes){
+ if(!minutes)return;
+ const sessionDate=dateStr(new Date(timer.started||Date.now()));
+ const before=db.sessions.filter(s=>s.date===sessionDate&&s.status!=='Abandoned').reduce((a,s)=>a+Number(s.minutes||0),0)/60;
+ let s={id:timer.sessionId||id(),date:sessionDate,start:timer.started||new Date().toISOString(),end:new Date().toISOString(),subject:timer.subject,chapter:timer.chapter,revision:timer.revision,activity:timer.activity,minutes,status,breakMinutes:0,notes:''};
+ db.sessions.push(s);
+ if(s.chapter){let c=db.chapters.find(x=>x.id===s.chapter);if(c)c.focused=(c.focused||0)+minutes/60}
+ save();
+ const after=before+minutes/60,target=Number(db.targets.daily||0);
+ if(sessionDate===dateStr()&&target>0&&before<target&&after>=target)celebrateDailyTarget(sessionDate,after,target);
+}
+function stopTimer(){if(timer.running)clearInterval(timer.interval);timer.running=false;if(timer.sessionId&&timer.elapsed>0)saveSession('Interrupted',Math.round(timer.elapsed/60));timer.sessionId=null;timer.elapsed=0;timer.paused=false;timer.mode='study';timer.remaining=timer.study*60;timer.total=timer.remaining;refreshTimerUI()}
+function resetTimer(){if(timer.running)clearInterval(timer.interval);timer.running=false;timer.sessionId=null;timer.elapsed=0;timer.paused=false;timer.mode='study';timer.remaining=timer.study*60;timer.total=timer.remaining;refreshTimerUI()}
+function skipBreak(){if(timer.mode==='break'){timer.mode='study';timer.remaining=timer.study*60;timer.total=timer.remaining;timer.running=false;timer.paused=false;refreshTimerUI()}}
+function timerRestore(){if(timer.running){let delta=Math.floor((Date.now()-timer.lastTick)/1000);if(delta>0){timer.remaining-=delta;if(timer.mode==='study')timer.elapsed=(timer.elapsed||0)+delta;timer.lastTick=Date.now()}if(timer.remaining<=0)finishPhase()}}
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&timer.running){timerRestore();refreshTimerUI()}});
 
-        /* Block Cards Layout */
-        .block-card { background: rgba(255,255,255,0.01); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 14px; }
-        .block-title { font-weight: 600; color: #fff; font-size: 1rem; margin-bottom: 4px; }
-        .block-dates { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 10px; }
-        .block-task-item { font-size: 0.85rem; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.03); }
-
-        /* Pomodoro Custom Elements */
-        .timer-display { font-size: 4.5rem; font-weight: 800; text-align: center; margin: 16px 0; font-variant-numeric: tabular-nums; color: var(--orange); }
-        .timer-controls { display: flex; gap: 12px; margin-top: 16px; }
-        .timer-settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; background: rgba(255,255,255,0.01); padding: 14px; border-radius: 8px; border: 1px solid var(--border); }
-        .timer-settings-grid label { font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px; }
-    </style>
-</head>
-<body>
-
-    <aside>
-        <div class="brand">
-            <h1>CA Inter Tracker</h1>
-            <p>Target Countdown Console</p>
-        </div>
-        
-        <div style="margin: 6px 0;">
-            <p style="font-size:0.7rem; color:var(--text-muted); text-transform:uppercase; font-weight:700; letter-spacing:0.05em;">Exam Timeline Countdown</p>
-            <div id="countdown-list-container" style="display:flex; flex-direction:column; gap:6px; margin-top:6px;"></div>
-        </div>
-
-        <nav style="margin-top:auto;">
-            <button class="nav-btn active" id="btn-calendar" onclick="switchView('calendar-view')">Daily Calendar</button>
-            <button class="nav-btn" id="btn-planner" onclick="switchView('planner-view')">Block Planner</button>
-            <button class="nav-btn" id="btn-deadlines" onclick="switchView('deadlines-view')">Deadline Master</button>
-            <button class="nav-btn" id="btn-pomodoro" onclick="switchView('pomodoro-view')">Sync Pomodoro</button>
-        </nav>
-    </aside>
-
-    <main>
-        <div id="calendar-view" class="view-section active">
-            <div class="calendar-layout">
-                <div>
-                    <div class="box">
-                        <div class="calendar-header">
-                            <h2 id="month-year-label" style="font-size:1.1rem; font-weight:700;"></h2>
-                            <div style="display:flex; gap:6px;">
-                                <button class="action-btn" style="padding:6px 12px; background:none; border:1px solid var(--border);" onclick="moveMonth(-1)">&larr;</button>
-                                <button class="action-btn" style="padding:6px 12px; background:none; border:1px solid var(--border);" onclick="moveMonth(1)">&rarr;</button>
-                            </div>
-                        </div>
-                        <div class="calendar-grid" id="weekday-labels-row"></div>
-                        <div class="calendar-grid" id="calendar-cells-grid" style="margin-top:8px;"></div>
-                    </div>
-
-                    <div class="box">
-                        <h3>Subject Preparation Hours (Total Breakdown)</h3>
-                        <div class="stat-grid" id="subject-statistics-breakdown"></div>
-                    </div>
-                </div>
-
-                <div>
-                    <div class="box">
-                        <h3 id="selected-date-title">Select a Date</h3>
-                        
-                        <div id="inline-calendar-deadline-alerts" style="margin-top: 10px;"></div>
-                        
-                        <div id="inline-calendar-block-status"></div>
-
-                        <div style="margin-top:12px; border-top: 1px solid var(--border); padding-top:14px;">
-                            <label style="font-size:0.75rem; color:var(--text-muted);">Select Target Subject</label>
-                            <select id="day-subject-select">
-                                <option value="aa">Paper 1: Advanced Accounting</option>
-                                <option value="law">Paper 2: Corporate and Other Laws</option>
-                                <option value="tax">Paper 3: Taxation (IT + GST)</option>
-                                <option value="cma">Paper 4: Cost & Management Accounting</option>
-                                <option value="audit">Paper 5: Auditing and Ethics</option>
-                                <option value="fmsm">Paper 6: FM & Strategic Management</option>
-                            </select>
-
-                            <label style="font-size:0.75rem; color:var(--text-muted);">Task Description / Chapter Details</label>
-                            <input type="text" id="day-task-input" placeholder="e.g. Practiced Mock Test Series 1">
-                            
-                            <label style="font-size:0.75rem; color:var(--text-muted);">Study Time Hours</label>
-                            <input type="number" id="day-hours-input" step="0.5" placeholder="e.g. 3.0">
-                            
-                            <button class="action-btn" onclick="saveDayTask()">Commit Daily Task Log</button>
-                        </div>
-                        <div style="margin-top:24px;">
-                            <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:10px;">Task Check-list Ledger For Selected Date</p>
-                            <div id="day-tasks-container"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div id="planner-view" class="view-section">
-            <div class="box">
-                <h3>Create Revision/Study Block Plan</h3>
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
-                    <div>
-                        <label style="font-size:0.75rem; color:var(--text-muted)">Block Plan Title</label>
-                        <input type="text" id="block-title-input" placeholder="e.g., First Revision Block">
-                    </div>
-                    <div>
-                        <label style="font-size:0.75rem; color:var(--text-muted)">Subject Target Group</label>
-                        <select id="block-subject-select">
-                            <option value="aa">Advanced Accounting</option>
-                            <option value="law">Corporate and Other Laws</option>
-                            <option value="tax">Taxation</option>
-                            <option value="cma">Cost & Management Accounting</option>
-                            <option value="audit">Auditing and Ethics</option>
-                            <option value="fmsm">FM & Strategic Management</option>
-                        </select>
-                    </div>
-                </div>
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:4px;">
-                    <div>
-                        <label style="font-size:0.75rem; color:var(--text-muted)">Start Date</label>
-                        <input type="date" id="block-start-date">
-                    </div>
-                    <div>
-                        <label style="font-size:0.75rem; color:var(--text-muted)">End Date</label>
-                        <input type="date" id="block-end-date">
-                    </div>
-                </div>
-                <label style="font-size:0.75rem; color:var(--text-muted)">Target Core Tasks (One task per line)</label>
-                <textarea id="block-tasks-textarea" rows="3" placeholder="Line 1: Complete Study Material Problems"></textarea>
-                <button class="action-btn" style="background:var(--emerald)" onclick="createBlockPlan()">Commit Block Matrix</button>
-            </div>
-            <div class="box">
-                <h3>Active Study Blocks Timeline</h3>
-                <div id="blocks-container"></div>
-            </div>
-        </div>
-
-        <div id="deadlines-view" class="view-section">
-            <div class="box">
-                <h3>Schedule Subject Mock Tests & Revision Deadlines</h3>
-                <div style="display:grid; grid-template-columns: 1.2fr 1fr 1fr; gap:12px;">
-                    <div>
-                        <label style="font-size:0.75rem; color:var(--text-muted)">Milestone Title / Chapter Targets</label>
-                        <input type="text" id="deadline-title-input" placeholder="e.g., ICAI MTP Series 1 Evaluation">
-                    </div>
-                    <div>
-                        <label style="font-size:0.75rem; color:var(--text-muted)">Subject Group</label>
-                        <select id="deadline-subject-select">
-                            <option value="aa">Advanced Accounting</option>
-                            <option value="law">Corporate and Other Laws</option>
-                            <option value="tax">Taxation (IT + GST)</option>
-                            <option value="cma">Cost & Management Accounting</option>
-                            <option value="audit">Auditing and Ethics</option>
-                            <option value="fmsm">FM & Strategic Management</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label style="font-size:0.75rem; color:var(--text-muted)">Target Deadline Type</label>
-                        <select id="deadline-type-select">
-                            <option value="mock">Full 3-Hour Mock Test</option>
-                            <option value="revision">Revision Completion Cutoff</option>
-                        </select>
-                    </div>
-                </div>
-                <div>
-                    <label style="font-size:0.75rem; color:var(--text-muted)">Target Execution Date</label>
-                    <input type="date" id="deadline-target-date" style="max-width:300px; display:block;">
-                </div>
-                <button class="action-btn" style="background:var(--purple); max-width:240px;" onclick="createDeadlineTarget()">Lock Deadline Gate</button>
-            </div>
-
-            <div class="box">
-                <h3>Scheduled Deadlines Registry</h3>
-                <div id="deadlines-list-container-panel" style="display:flex; flex-direction:column; gap:10px;"></div>
-            </div>
-        </div>
-
-        <div id="pomodoro-view" class="view-section">
-            <div class="box" style="max-width: 550px; margin: 0 auto;">
-                <h3>Focus Interval Engine (Auto-Sync)</h3>
-                <div class="timer-settings-grid">
-                    <div>
-                        <label for="custom-focus-time">Focus Block (Minutes)</label>
-                        <input type="number" id="custom-focus-time" value="25" min="1" max="180" onchange="adjustTimerSettings()">
-                    </div>
-                    <div>
-                        <label for="custom-break-time">Break Block (Minutes)</label>
-                        <input type="number" id="custom-break-time" value="5" min="1" max="60" onchange="adjustTimerSettings()">
-                    </div>
-                </div>
-
-                <label style="font-size:0.75rem; color:var(--text-muted);">Target Subject for Active Focus Session</label>
-                <select id="pomo-subject-select" style="margin-bottom:20px;">
-                    <option value="aa">Paper 1: Advanced Accounting</option>
-                    <option value="law">Paper 2: Corporate and Other Laws</option>
-                    <option value="tax">Paper 3: Taxation (IT + GST)</option>
-                    <option value="cma">Paper 4: Cost & Management Accounting</option>
-                    <option value="audit">Paper 5: Auditing and Ethics</option>
-                    <option value="fmsm">Paper 6: FM & Strategic Management</option>
-                </select>
-
-                <div id="timer-status-text" style="text-align:center; font-size:0.9rem; font-weight:600; text-transform:uppercase; color:var(--orange);">Focus Period</div>
-                <div class="timer-display" id="timer-clock">25:00</div>
-                
-                <div class="timer-controls">
-                    <button class="action-btn" style="background:var(--emerald)" onclick="startTimer()">Start Session</button>
-                    <button class="action-btn" style="background:var(--orange)" onclick="pauseTimer()">Pause</button>
-                    <button class="action-btn" style="background:rgba(255,255,255,0.1); color: #fff;" onclick="resetTimer()">Reset</button>
-                </div>
-                <p style="font-size:0.75rem; color:var(--text-muted); text-align:center; margin-top:16px;">💡 Completing a session will auto-log hours to today's date in the calendar.</p>
-            </div>
-        </div>
-    </main>
-
-    <script>
-        const subjectsMapping = {
-            aa: "Advanced Accounting", law: "Corporate and Other Laws", tax: "Taxation (IT + GST)",
-            cma: "Cost & Management Accounting", audit: "Auditing and Ethics", fmsm: "FM & Strategic Management"
-        };
-
-        const examDates = [
-            { name: "P1: Adv Accounting", date: "2026-09-01" },
-            { name: "P2: Corporate Law", date: "2026-09-03" },
-            { name: "P3: Taxation", date: "2026-09-06" },
-            { name: "P4: Cost & Mgmt", date: "2026-09-08" },
-            { name: "P5: Audit & Ethics", date: "2026-09-10" },
-            { name: "P6: FM & SM", date: "2026-09-12" }
-        ];
-
-        // Advanced Integrated Model Database Structure Upgrade
-        let db = { calendarData: {}, blocks: [], deadlines: [], timerConfig: { focusMins: 25, breakMins: 5 } };
-        let currentNavDate = new Date();
-        let selectedDateStr = new Date().toISOString().split('T')[0];
-        let timerInterval = null, timeRemaining = 25 * 60, isBreakMode = false;
-
-        function switchView(viewId) {
-            document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById(viewId).classList.add('active');
-            if (viewId === 'calendar-view') document.getElementById('btn-calendar').classList.add('active');
-            if (viewId === 'planner-view') document.getElementById('btn-planner').classList.add('active');
-            if (viewId === 'deadlines-view') document.getElementById('btn-deadlines').classList.add('active');
-            if (viewId === 'pomodoro-view') document.getElementById('btn-pomodoro').classList.add('active');
-        }
-
-        function updateCountdowns() {
-            const container = document.getElementById('countdown-list-container');
-            container.innerHTML = '';
-            const today = new Date();
-            
-            examDates.forEach(exam => {
-                const examTarget = new Date(exam.date + "T00:00:00");
-                const diffTime = examTarget - today;
-                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                const displayDays = diffDays > 0 ? `${diffDays} days left` : "Exam Day / Passed";
-                
-                container.innerHTML += `
-                    <div class="countdown-box">
-                        <div class="countdown-title">
-                            <span>${exam.name}</span>
-                            <span class="countdown-days">${displayDays}</span>
-                        </div>
-                    </div>
-                `;
-            });
-        }
-
-        function initData() {
-            const saved = localStorage.getItem('ca_space_db_v7');
-            if (saved) {
-                const parsed = JSON.parse(saved);
-                if (parsed) { 
-                    db = parsed; 
-                    if (!db.blocks) db.blocks = []; 
-                    if (!db.deadlines) db.deadlines = [];
-                }
-            }
-            document.getElementById('custom-focus-time').value = db.timerConfig.focusMins;
-            document.getElementById('custom-break-time').value = db.timerConfig.breakMins;
-            timeRemaining = db.timerConfig.focusMins * 60;
-
-            const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-            document.getElementById('weekday-labels-row').innerHTML = days.map(d => `<div class="weekday-label">${d}</div>`).join('');
-            
-            updateCountdowns();
-            setInterval(updateCountdowns, 60000);
-            updateTimerDisplay();
-            renderCalendar();
-            renderSelectedDayView();
-            renderBlocks();
-            renderDeadlines();
-        }
-
-        function saveAndRefresh() {
-            localStorage.setItem('ca_space_db_v7', JSON.stringify(db));
-            renderCalendar();
-            renderSelectedDayView();
-            renderBlocks();
-            renderDeadlines();
-        }
-
-        function moveMonth(dir) { currentNavDate.setMonth(currentNavDate.getMonth() + dir); renderCalendar(); }
-
-        function renderCalendar() {
-            const year = currentNavDate.getFullYear(), month = currentNavDate.getMonth();
-            const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-            document.getElementById('month-year-label').innerText = `${monthNames[month]} ${year}`;
-            
-            const firstDayIdx = new Date(year, month, 1).getDay();
-            const totalDays = new Date(year, month + 1, 0).getDate();
-            const gridContainer = document.getElementById('calendar-cells-grid');
-            gridContainer.innerHTML = '';
-            
-            for(let i = 0; i < firstDayIdx; i++) { gridContainer.innerHTML += `<div></div>`; }
-            for(let day = 1; day <= totalDays; day++) {
-                const mapMonth = (month + 1).toString().padStart(2, '0');
-                const mapDay = day.toString().padStart(2, '0');
-                const loopDateStr = `${year}-${mapMonth}-${mapDay}`;
-                
-                const hasDataLogs = db.calendarData[loopDateStr] && db.calendarData[loopDateStr].length > 0;
-                const matchesActiveBlockRange = db.blocks.some(b => loopDateStr >= b.start && loopDateStr <= b.end);
-                
-                // Realtime Check: Check if an upcoming master deadline is placed on this calendar cell coordinate
-                const hasDeadlineAttached = db.deadlines.some(d => d.date === loopDateStr);
-                
-                const hasDataClass = (hasDataLogs || matchesActiveBlockRange) ? 'has-data' : '';
-                const deadlineCellClass = hasDeadlineAttached ? 'has-deadline' : '';
-                const activeClass = loopDateStr === selectedDateStr ? 'active' : '';
-                
-                let dailyHoursSum = 0;
-                if(db.calendarData[loopDateStr]) { db.calendarData[loopDateStr].forEach(t => dailyHoursSum += parseFloat(t.hours || 0)); }
-                const displayHours = dailyHoursSum > 0 ? `<span class="day-hours-badge">${dailyHoursSum.toFixed(1)}h</span>` : '<span></span>';
-
-                gridContainer.innerHTML += `
-                    <div class="day-cell ${activeClass} ${hasDataClass} ${deadlineCellClass}" onclick="selectDate('${loopDateStr}')">
-                        ${displayHours}
-                        <span style="align-self: flex-end; font-weight:500;">${day}</span>
-                    </div>
-                `;
-            }
-            renderSubjectMetrics();
-        }
-
-        function renderSubjectMetrics() {
-            const statsContainer = document.getElementById('subject-statistics-breakdown');
-            statsContainer.innerHTML = '';
-            let subjectHoursTracker = { aa: 0, law: 0, tax: 0, cma: 0, audit: 0, fmsm: 0 };
-            
-            Object.keys(db.calendarData).forEach(dateKey => {
-                db.calendarData[dateKey].forEach(task => {
-                    if (subjectHoursTracker[task.subjectKey] !== undefined) {
-                        subjectHoursTracker[task.subjectKey] += parseFloat(task.hours || 0);
-                    }
-                });
-            });
-
-            Object.keys(subjectsMapping).forEach(key => {
-                statsContainer.innerHTML += `
-                    <div class="stat-row">
-                        <span>${subjectsMapping[key]}</span>
-                        <span class="stat-hours-count">${subjectHoursTracker[key].toFixed(2)} Hours</span>
-                    </div>
-                `;
-            });
-        }
-
-        function selectDate(dateStr) { selectedDateStr = dateStr; renderCalendar(); renderSelectedDayView(); }
-
-        function renderSelectedDayView() {
-            const parsedDate = new Date(selectedDateStr + "T00:00:00");
-            document.getElementById('selected-date-title').innerText = parsedDate.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
-            
-            // Render High-Priority Scheduled Deadlines Alert inside the Selected Date container
-            const alertPanel = document.getElementById('inline-calendar-deadline-alerts');
-            alertPanel.innerHTML = '';
-            const matchingDeadlines = db.deadlines.filter(d => d.date === selectedDateStr);
-            
-            if(matchingDeadlines.length > 0) {
-                matchingDeadlines.forEach(dl => {
-                    const typeBadge = dl.type === 'mock' ? '<span class="deadline-badge-type badge-mock">Mock Test</span>' : '<span class="deadline-badge-type badge-rev">Revision Deadline</span>';
-                    const completeStyle = dl.done ? 'text-decoration: line-through; opacity: 0.6;' : '';
-                    alertPanel.innerHTML += `
-                        <div class="deadline-alert-node" style="${completeStyle}">
-                            ⚠️ <strong>${typeBadge} ${subjectsMapping[dl.subject]}</strong>
-                            <div style="margin-top: 4px; color: #fff; font-size: 0.85rem;">Target: ${dl.title}</div>
-                        </div>
-                    `;
-                });
-            }
-
-            const inlineStatusContainer = document.getElementById('inline-calendar-block-status');
-            inlineStatusContainer.innerHTML = '';
-            const activeMatchingBlocks = db.blocks.filter(b => selectedDateStr >= b.start && selectedDateStr <= b.end);
-            
-            if(activeMatchingBlocks.length > 0) {
-                activeMatchingBlocks.forEach(block => {
-                    let inlineTasksProgressHTML = '';
-                    block.tasks.forEach((task) => {
-                        const strike = task.done ? 'text-decoration: line-through; color: var(--text-muted);' : 'color:#fff;';
-                        const checkMark = task.done ? '✓' : '•';
-                        inlineTasksProgressHTML += `
-                            <div style="font-size:0.8rem; margin-top:4px; display:flex; gap:6px; align-items:center; ${strike}">
-                                <span>${checkMark}</span> <span>${task.text}</span>
-                            </div>
-                        `;
-                    });
-                    inlineStatusContainer.innerHTML += `
-                        <div class="inline-block-node">
-                            <div class="inline-block-node-title">
-                                <span>🎯 Block Context: ${block.title}</span>
-                                <span style="font-size:0.7rem; opacity:0.8;">(${subjectsMapping[block.subject]})</span>
-                            </div>
-                            <div style="background: rgba(0,0,0,0.2); padding: 8px; border-radius: 6px;">
-                                ${inlineTasksProgressHTML}
-                            </div>
-                        </div>
-                    `;
-                });
-            }
-
-            const container = document.getElementById('day-tasks-container');
-            container.innerHTML = '';
-            const entries = db.calendarData[selectedDateStr] || [];
-            
-            if(entries.length === 0) { container.innerHTML = `<p style="font-size:0.85rem; color:var(--text-muted)">No entries logged for this day.</p>`; return; }
-            
-            entries.forEach((entry, idx) => {
-                const checkedClass = entry.completed ? 'completed' : '';
-                const strikeStyle = entry.completed ? 'text-decoration: line-through; color: var(--text-muted);' : 'color:#fff;';
-                const checkboxIcon = entry.completed ? '✓' : '';
-
-                container.innerHTML += `
-                    <div class="task-row">
-                        <div class="task-left">
-                            <button class="task-checkbox-btn ${checkedClass}" onclick="toggleTaskCompletion(${idx})">${checkboxIcon}</button>
-                            <div class="task-content-block">
-                                <div class="task-meta-tags">
-                                    <span class="task-subj-tag">${subjectsMapping[entry.subjectKey] || "Study Block"}</span>
-                                    <span class="task-hours">${entry.hours}h</span>
-                                </div>
-                                <span style="font-weight: 500; margin-top:2px; ${strikeStyle}">${entry.text}</span>
-                            </div>
-                        </div>
-                        <button class="del-btn" onclick="deleteDayTask('${idx}')">Delete</button>
-                    </div>
-                `;
-            });
-        }
-
-        function toggleTaskCompletion(idx) {
-            db.calendarData[selectedDateStr][idx].completed = !db.calendarData[selectedDateStr][idx].completed;
-            saveAndRefresh();
-        }
-
-        function saveDayTask() {
-            const textVal = document.getElementById('day-task-input').value.trim();
-            const hoursVal = parseFloat(document.getElementById('day-hours-input').value);
-            const subjectKey = document.getElementById('day-subject-select').value;
-            if(!textVal || isNaN(hoursVal) || hoursVal <= 0) return;
-            
-            if(!db.calendarData[selectedDateStr]) { db.calendarData[selectedDateStr] = []; }
-            db.calendarData[selectedDateStr].push({ text: textVal, hours: hoursVal, subjectKey: subjectKey, completed: false });
-            document.getElementById('day-task-input').value = '';
-            document.getElementById('day-hours-input').value = '';
-            saveAndRefresh();
-        }
-
-        function deleteDayTask(idx) {
-            db.calendarData[selectedDateStr].splice(idx, 1);
-            if(db.calendarData[selectedDateStr].length === 0) delete db.calendarData[selectedDateStr];
-            saveAndRefresh();
-        }
-
-        // Deadline Core Sub-System Logic Handling
-        function createDeadlineTarget() {
-            const title = document.getElementById('deadline-title-input').value.trim();
-            const subj = document.getElementById('deadline-subject-select').value;
-            const type = document.getElementById('deadline-type-select').value;
-            const targetDate = document.getElementById('deadline-target-date').value;
-            if(!title || !targetDate) { alert("Please complete milestone targets and select target date execution."); return; }
-            
-            db.deadlines.push({ id: Math.random().toString(36).substring(2, 7), title: title, subject: subj, type: type, date: targetDate, done: false });
-            document.getElementById('deadline-title-input').value = '';
-            saveAndRefresh();
-        }
-
-        function toggleDeadlineStatus(idx) { db.deadlines[idx].done = !db.deadlines[idx].done; saveAndRefresh(); }
-        function deleteDeadlineTarget(idx) { db.deadlines.splice(idx, 1); saveAndRefresh(); }
-
-        function renderDeadlines() {
-            const container = document.getElementById('deadlines-list-container-panel');
-            container.innerHTML = '';
-            if(db.deadlines.length === 0) { container.innerHTML = `<p style="font-size:0.85rem; color:var(--text-muted)">No specialized mock tests or revision deadlines created.</p>`; return; }
-            
-            // Sort systematically by date timeline priority order
-            db.deadlines.sort((a,b) => new Date(a.date) - new Date(b.date));
-            
-            db.deadlines.forEach((dl, idx) => {
-                const badge = dl.type === 'mock' ? '<span class="deadline-badge-type badge-mock">Mock Exam</span>' : '<span class="deadline-badge-type badge-rev">Revision Gate</span>';
-                const checked = dl.done ? 'checked' : '';
-                const strike = dl.done ? 'text-decoration: line-through; color: var(--text-muted);' : '';
-                
-                container.innerHTML += `
-                    <div class="task-row" style="background: rgba(255,255,255,0.01)">
-                        <div class="task-left">
-                            <input type="checkbox" ${checked} onchange="toggleDeadlineStatus(${idx})" style="width:auto; margin-bottom:0; cursor:pointer;">
-                            <div class="task-content-block" style="${strike}">
-                                <div style="display:flex; align-items:center; gap:6px;">
-                                    ${badge} <span style="font-weight:600; color:#fff;">${subjectsMapping[dl.subject]}</span>
-                                </div>
-                                <div style="font-size:0.85rem; margin-top:2px;">${dl.title} &bull; <span style="color:var(--orange)">Due: ${dl.date}</span></div>
-                            </div>
-                        </div>
-                        <button class="del-btn" onclick="deleteDeadlineTarget(${idx})">Cancel Target</button>
-                    </div>
-                `;
-            });
-        }
-
-        function createBlockPlan() {
-            const title = document.getElementById('block-title-input').value.trim();
-            const subj = document.getElementById('block-subject-select').value;
-            const start = document.getElementById('block-start-date').value, end = document.getElementById('block-end-date').value;
-            const rawTasks = document.getElementById('block-tasks-textarea').value.split('\n');
-            if(!title || !start || !end) { alert("Please fill Title, Start, and End dates."); return; }
-            
-            const tasksArray = [];
-            rawTasks.forEach(t => { if(t.trim()) tasksArray.push({ text: t.trim(), done: false }); });
-            db.blocks.push({ id: Math.random().toString(36).substring(2, 7), title: title, subject: subj, start: start, end: end, tasks: tasksArray });
-            document.getElementById('block-title-input').value = '';
-            document.getElementById('block-tasks-textarea').value = '';
-            saveAndRefresh();
-        }
-
-        function toggleBlockTask(bIdx, tIdx) { db.blocks[bIdx].tasks[tIdx].done = !db.blocks[bIdx].tasks[tIdx].done; saveAndRefresh(); }
-        function deleteBlockPlan(bIdx) { db.blocks.splice(bIdx, 1); saveAndRefresh(); }
-
-        function renderBlocks() {
-            const container = document.getElementById('blocks-container'); container.innerHTML = '';
-            if(db.blocks.length === 0) { container.innerHTML = `<p style="font-size:0.85rem; color:var(--text-muted)">No phase blocks created.</p>`; return; }
-            db.blocks.forEach((block, bIdx) => {
-                let tasksHTML = '';
-                block.tasks.forEach((task, tIdx) => {
-                    const checked = task.done ? 'checked' : '';
-                    const strike = task.done ? 'text-decoration:line-through; color:var(--text-muted);' : '';
-                    tasksHTML += `
-                        <div class="block-task-item">
-                            <label style="display:flex; gap:8px; align-items:center; cursor:pointer; ${strike}">
-                                <input type="checkbox" ${checked} onchange="toggleBlockTask(${bIdx}, ${tIdx})" style="width:auto; margin-bottom:0;">
-                                ${task.text}
-                            </label>
-                        </div>
-                    `;
-                });
-                container.innerHTML += `
-                    <div class="block-card">
-                        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-                            <div>
-                                <div class="block-title">${block.title}</div>
-                                <div class="block-dates">${subjectsMapping[block.subject]} &bull; ${block.start} to ${block.end}</div>
-                            </div>
-                            <button class="del-btn" onclick="deleteBlockPlan(${bIdx})">Remove</button>
-                        </div>
-                        <div style="margin-top:10px; background:rgba(0,0,0,0.15); padding:10px; border-radius:8px;">${tasksHTML}</div>
-                    </div>
-                `;
-            });
-        }
-
-        function adjustTimerSettings() {
-            let focusInput = parseInt(document.getElementById('custom-focus-time').value);
-            let breakInput = parseInt(document.getElementById('custom-break-time').value);
-            db.timerConfig.focusMins = isNaN(focusInput) ? 25 : focusInput;
-            db.timerConfig.breakMins = isNaN(breakInput) ? 5 : breakInput;
-            localStorage.setItem('ca_space_db_v7', JSON.stringify(db));
-            if(!timerInterval) { isBreakMode = false; timeRemaining = db.timerConfig.focusMins * 60; updateTimerDisplay(); }
-        }
-
-        function updateTimerDisplay() {
-            document.getElementById('timer-clock').innerText = `${Math.floor(timeRemaining / 60).toString().padStart(2, '0')}:${(timeRemaining % 60).toString().padStart(2, '0')}`;
-        }
-
-        function startTimer() {
-            if (timerInterval) return;
-            timerInterval = setInterval(() => {
-                if (timeRemaining > 0) { timeRemaining--; updateTimerDisplay(); } 
-                else {
-                    clearInterval(timerInterval); timerInterval = null;
-                    if(!isBreakMode) {
-                        isBreakMode = true;
-                        
-                        const todayStr = new Date().toISOString().split('T')[0];
-                        const loggedMins = db.timerConfig.focusMins;
-                        const finalHours = parseFloat((loggedMins / 60).toFixed(2));
-                        const selectedSubj = document.getElementById('pomo-subject-select').value;
-                        
-                        if(!db.calendarData[todayStr]) { db.calendarData[todayStr] = []; }
-                        db.calendarData[todayStr].push({
-                            text: `Pomodoro Focus Session Completed (${loggedMins} mins)`,
-                            hours: finalHours,
-                            subjectKey: selectedSubj,
-                            completed: true
-                        });
-                        
-                        timeRemaining = db.timerConfig.breakMins * 60;
-                        document.getElementById('timer-status-text').innerText = "Break Interval Active";
-                        document.getElementById('timer-status-text').style.color = "var(--emerald)";
-                        saveAndRefresh();
-                        alert(`Session Complete! Auto-logged ${finalHours} hours to today's database.`);
-                    } else {
-                        isBreakMode = false; timeRemaining = db.timerConfig.focusMins * 60;
-                        document.getElementById('timer-status-text').innerText = "Focus Period";
-                        document.getElementById('timer-status-text').style.color = "var(--orange)";
-                        alert("Break over! Ready for the next stretch?");
-                    }
-                    updateTimerDisplay();
-                }
-            }, 1000);
-        }
-
-        function pauseTimer() { clearInterval(timerInterval); timerInterval = null; }
-        function resetTimer() { pauseTimer(); isBreakMode = false; timeRemaining = db.timerConfig.focusMins * 60; updateTimerDisplay(); }
-
-        initData();
-    </script>
-</body>
-</html>
+const celebrationQuotes=[
+ "Small, consistent efforts create extraordinary results.",
+ "You do not need a perfect day. You need a day you showed up.",
+ "Discipline is choosing what you want most over what you want now.",
+ "One focused hour at a time. That is how the mountain gets climbed.",
+ "Today's effort is tomorrow's confidence."
+];
+function celebrateDailyTarget(day,actual,target){
+ db.celebratedDays=db.celebratedDays||[];
+ if(db.celebratedDays.includes(day))return;
+ db.celebratedDays.push(day);save();
+ const quote=celebrationQuotes[Math.floor(Math.random()*celebrationQuotes.length)];
+ if($('#celebrateMessage'))$('#celebrateMessage').textContent=`${hours(actual)} of ${hours(target)} focused hours completed. You hit your daily study target!`;
+ if($('#celebrateQuote'))$('#celebrateQuote').textContent='“'+quote+'”';
+ const confetti=$('#confetti');if(confetti)confetti.innerHTML=Array.from({length:42},(_,i)=>`<i style="left:${(i*37)%100}%;animation-delay:${(i%9)*-.23}s;transform:rotate(${i*29}deg)"></i>`).join('');
+ if($('#celebrateBackdrop'))$('#celebrateBackdrop').style.display='flex';
+}
+function closeCelebration(){if($('#celebrateBackdrop'))$('#celebrateBackdrop').style.display='none'}
+function renderInit(){render();setInterval(()=>{if(timer.running){timerRestore();refreshTimerUI()}},1000)}
+renderInit();
+</script></body></html>
+ 
